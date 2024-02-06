@@ -2,36 +2,15 @@ const delim = ':';
 
 async function keyReleased(event) {
     var textElement = event.srcElement;
-    console.log("keyReleased" + event.key);
     if(event.key === delim){
 
-        var selectionStart = textElement.selectionStart;
+        var text;
+
 
         if(textElement.tagName === 'TEXTAREA' || textElement.tagName === 'INPUT' || textElement.isContentEditable === false){
-            var sequence = textElement.value.split(delim);
-            if(sequence.length < 3){ /// there should be at least two delimiters
-                return;
-            }
-            sequence.pop(); /// remove the last one (it is always '')
-            sequence = sequence.pop();
-            var replacement = await checkDictionary(sequence);  
-            Promise.resolve(replacement);
-            console.log(replacement);
-            if(replacement != undefined){
-                var newContent = textElement.value.replace(':' + sequence + ':', replacement);
-                console.log(newContent);
-                textElement.value = newContent;
-            }
-
+            text = textElement.value;
         }else{
-            var sequence = textElement.innerHTML.split(delim);
-            if(sequence.length < 3){ /// there should be at least two delimiters
-                return;
-            }
-            sequence.pop(); /// remove the last one (it is always '')
-            sequence = sequence.pop();
-            var replacement = await checkDictionary(sequence);  
-            Promise.resolve(replacement);
+            text = textElement.innerHTML;
             if(replacement != undefined){
                 var newContent = textElement.innerHTML.replace(':' + sequence + ':', replacement);
                 textElement.innerHTML = newContent;
@@ -39,6 +18,28 @@ async function keyReleased(event) {
                 // textElement.setSelectionRange(selectionStart, selectionStart);
                 textElement.selectionStart = selectionStart;
             }
+        }
+        /// the next 4 lines extract the text inside nested tags
+        text = text.split('>');
+        text = text[Math.floor(text.length / 2)];
+        text = text.split('<');
+        text = text[0];
+        var sequence = text.split(delim);
+        if(sequence.length < 3){ /// there should be at least two delimiters
+            return;
+        }
+        sequence.pop();/// remove the last one
+        var word = sequence.pop(); 
+        var replacement = await checkDictionary(word);  
+        Promise.resolve(replacement);
+        if(replacement != undefined){
+            text = text.replace(':' + word + ':', replacement);
+        }
+        if(textElement.tagName === 'TEXTAREA' || textElement.tagName === 'INPUT' || textElement.isContentEditable === false){
+            textElement.value = text;
+        }else{
+            document.execCommand('selectAll',false,null);
+            document.execCommand('insertText',false,text);
         }
 
     }
