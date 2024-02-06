@@ -32,10 +32,10 @@ async function keyReleased(event) {
         sequence.pop(); /// remove the last element, which is the empty string after the last delimiter
         word = sequence.pop(); /// get the last word
         var replacement = await checkDictionary(word);  
-        console.log(word, replacement);
+        console.log(text, caretPos, word, replacement);
         Promise.resolve(replacement);
         if(replacement != ''){
-            text = text.slice(0, caretPos - word.length) + replacement + text.slice(caretPos);
+            text = text.slice(0, caretPos - word.length - 2) + replacement + text.slice(caretPos);
             console.log(text);
             if(textElement.tagName === 'TEXTAREA' || textElement.tagName === 'INPUT' || textElement.isContentEditable === false){
                 textElement.value = text;
