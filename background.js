@@ -16,6 +16,6 @@ chrome.runtime.onMessage.addListener(function(request, sender, sendResponse){
     }
     if(request.action === 'set'){
         DICT[request.word] = request.replacement;
-        sendResponse({response: 'success'});
+        sendResponse('success');
     }
 });

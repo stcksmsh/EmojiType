@@ -2,8 +2,11 @@ const delim = ':';
 
 async function keyReleased(event) {
     var textElement = event.srcElement;
-
+    console.log("keyReleased" + event.key);
     if(event.key === delim){
+
+        var selectionStart = textElement.selectionStart;
+
         if(textElement.tagName === 'TEXTAREA' || textElement.tagName === 'INPUT' || textElement.isContentEditable === false){
             var sequence = textElement.value.split(delim);
             if(sequence.length < 3){ /// there should be at least two delimiters
@@ -32,6 +35,9 @@ async function keyReleased(event) {
             if(replacement != undefined){
                 var newContent = textElement.innerHTML.replace(':' + sequence + ':', replacement);
                 textElement.innerHTML = newContent;
+                // selectionStart = selectionStart - sequence.length - 2 + replacement.length;
+                // textElement.setSelectionRange(selectionStart, selectionStart);
+                textElement.selectionStart = selectionStart;
             }
         }
 
