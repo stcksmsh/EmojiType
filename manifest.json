@@ -1,0 +1,33 @@
+{
+    "manifest_version": 3,
+    "name": "Emoji Type",
+    "description": "Allows you to type emojis in any text field by replacing specific text with emojis.",
+    "version": "1.0",
+    "icons": {
+        "16": "images/icon16.png",
+        "24": "images/icon24.png",
+        "32": "images/icon32.png",
+        "48": "images/icon48.png",
+        "64": "images/icon64.png",
+        "128": "images/icon128.png"
+    },
+    "content_scripts": [
+      {
+        "matches": ["*://*/**"],
+        "js": ["replace.js"],
+        "run_at": "document_end"
+      }
+    ],
+    "background": {
+      "service_worker": "background.js",
+      "type": "module"
+    },
+    "action": {
+      "default_popup": "popup.html"
+    },
+    "permissions": [
+        "storage",
+        "nativeMessaging",
+        "downloads"
+    ]
+  }
