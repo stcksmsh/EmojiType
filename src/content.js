@@ -21,29 +21,55 @@ async function keyReleased(event) {
         
         /// get position of caret
         var caretPos = textElement.selectionStart;
-
-        
-        /// gets part of text before the next delimiter (including the delimiter)
-        var sequence = text.slice(0, caretPos).split(delim);
-        console.log(sequence);
-        if(sequence.length < 3){ /// there should be at least two delimiters
-            return;
-        }
-        sequence.pop(); /// remove the last element, which is the empty string after the last delimiter
-        word = sequence.pop(); /// get the last word
-        var replacement = await checkDictionary(word);  
-        console.log(text, caretPos, word, replacement);
-        Promise.resolve(replacement);
-        if(replacement != ''){
-            text = text.slice(0, caretPos - word.length - 2) + replacement + text.slice(caretPos);
-            console.log(text);
+        if(caretPos === undefined){
+            var sequence = text.split(delim); /// get the sequence of words separated by the delimiter
+            var newText = '';
+            var replaced = false;
+            // console.log(sequence);
+            for(var i = 0; i < sequence.length; i++){
+                var replacement = await checkDictionary(sequence[i]);
+                Promise.resolve(replacement);
+                if(replacement != ''){
+                    newText += replacement;
+                    replaced = true;
+                }else{
+                    if(!replaced && i > 0){
+                        newText += delim;
+                    }
+                    newText += sequence[i];
+                    replaced = false;
+                }
+            }
             if(textElement.tagName === 'TEXTAREA' || textElement.tagName === 'INPUT' || textElement.isContentEditable === false){
-                textElement.value = text;
+                textElement.value = newText;
             }else{
                 document.execCommand('selectAll',false,null);
-                document.execCommand('insertHTML',false,text);
+                document.execCommand('insertHTML',false,newText);
             }
-            setCaretPosition(textElement, caretPos - word.length + replacement.length);
+        }else{
+
+            /// gets part of text before the next delimiter (including the delimiter)
+            var sequence = text.slice(0, caretPos).split(delim);
+            // console.log(sequence);
+            if(sequence.length < 3){ /// there should be at least two delimiters
+                return;
+            }
+            sequence.pop(); /// remove the last element, which is the empty string after the last delimiter
+            word = sequence.pop(); /// get the last word
+            var replacement = await checkDictionary(word);  
+            // console.log(text, caretPos, word, replacement);
+            Promise.resolve(replacement);
+            if(replacement != ''){
+                text = text.slice(0, caretPos - word.length - 2) + replacement + text.slice(caretPos);
+                // console.log(text);
+                if(textElement.tagName === 'TEXTAREA' || textElement.tagName === 'INPUT' || textElement.isContentEditable === false){
+                    textElement.value = text;
+                }else{
+                    document.execCommand('selectAll',false,null);
+                    document.execCommand('insertHTML',false,text);
+                }
+                setCaretPosition(textElement, caretPos - word.length + replacement.length);
+            }
         }
     }
 }
@@ -53,6 +79,11 @@ async function keyPressed(event) {
     var textElement = event.srcElement;
     
     if(event.key === 'Backspace'){
+        var caretPos = textElement.selectionStart;
+        if(caretPos === undefined){
+            return;/// if caret position is not available, we can't really do anything
+        }
+
         var text;
         if(textElement.tagName === 'TEXTAREA' || textElement.tagName === 'INPUT' || textElement.isContentEditable === false){
             text = textElement.value;
@@ -65,7 +96,6 @@ async function keyPressed(event) {
         text = text[0];
         
         /// get position of caret
-        var caretPos = textElement.selectionStart;
         var codePointArray = Array.from(text);
         var codeCharPos = 0;        
         var counter = 0;
@@ -79,6 +109,7 @@ async function keyPressed(event) {
         var character = codePointArray[codeCharPos-1];
         var replacement = await checkReverseDictionary(character);
         Promise.resolve(replacement);
+        console.log(text, caretPos, character, replacement);
         if(replacement != ''){
             text = codePointArray.slice(0, codeCharPos-1).join('') + delim + replacement + codePointArray.slice(codeCharPos+1).join('');
             if(textElement.tagName === 'TEXTAREA' || textElement.tagName === 'INPUT' || textElement.isContentEditable === false){
