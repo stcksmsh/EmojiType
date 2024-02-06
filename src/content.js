@@ -14,8 +14,6 @@ async function keyReleased(event) {
             if(replacement != undefined){
                 var newContent = textElement.innerHTML.replace(':' + sequence + ':', replacement);
                 textElement.innerHTML = newContent;
-                // selectionStart = selectionStart - sequence.length - 2 + replacement.length;
-                // textElement.setSelectionRange(selectionStart, selectionStart);
                 textElement.selectionStart = selectionStart;
             }
         }
@@ -39,7 +37,7 @@ async function keyReleased(event) {
             textElement.value = text;
         }else{
             document.execCommand('selectAll',false,null);
-            document.execCommand('insertText',false,text);
+            document.execCommand('insertHTML',false,text);
         }
 
     }
