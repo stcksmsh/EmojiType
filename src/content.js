@@ -25,10 +25,8 @@ async function keyReleased(event) {
             var sequence = text.split(delim); /// get the sequence of words separated by the delimiter
             var newText = '';
             var replaced = false;
-            // console.log(sequence);
             for(var i = 0; i < sequence.length; i++){
                 var replacement = await checkDictionary(sequence[i]);
-                Promise.resolve(replacement);
                 if(replacement != ''){
                     newText += replacement;
                     replaced = true;
@@ -50,18 +48,14 @@ async function keyReleased(event) {
 
             /// gets part of text before the next delimiter (including the delimiter)
             var sequence = text.slice(0, caretPos).split(delim);
-            // console.log(sequence);
             if(sequence.length < 3){ /// there should be at least two delimiters
                 return;
             }
             sequence.pop(); /// remove the last element, which is the empty string after the last delimiter
             word = sequence.pop(); /// get the last word
             var replacement = await checkDictionary(word);  
-            // console.log(text, caretPos, word, replacement);
-            Promise.resolve(replacement);
             if(replacement != ''){
                 text = text.slice(0, caretPos - word.length - 2) + replacement + text.slice(caretPos);
-                // console.log(text);
                 if(textElement.tagName === 'TEXTAREA' || textElement.tagName === 'INPUT' || textElement.isContentEditable === false){
                     textElement.value = text;
                 }else{
@@ -109,7 +103,6 @@ async function keyPressed(event) {
         var character = codePointArray[codeCharPos-1];
         var replacement = await checkReverseDictionary(character);
         Promise.resolve(replacement);
-        console.log(text, caretPos, character, replacement);
         if(replacement != ''){
             text = codePointArray.slice(0, codeCharPos-1).join('') + delim + replacement + codePointArray.slice(codeCharPos+1).join('');
             if(textElement.tagName === 'TEXTAREA' || textElement.tagName === 'INPUT' || textElement.isContentEditable === false){
