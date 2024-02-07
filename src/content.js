@@ -25,7 +25,10 @@ async function keyReleased(event) {
         var caretPos = textElement.selectionStart;
         if (caretPos === undefined) {
             var sequence = text.split(delim); /// get the sequence of words separated by the delimiter
-            var newText = "";
+            if (sequence.length < 2) {
+                return; /// there should be at least two delimiters
+            }
+            var newText = sequence[0];
             var replaced = false;
             for (var i = 1; i < sequence.length - 1; i++) { /// start from 1, since the first element is before the first delimiter, and go to the second to last element, since the last element is after the last delimiter
                 if (sequence[i] === "" || sequence[i] === undefined) {
