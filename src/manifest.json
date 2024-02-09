@@ -11,13 +11,11 @@
         "64": "images/icon64.png",
         "128": "images/icon128.png"
     },
-    "content_scripts": [
-      {
-        "matches": ["*://*/**"],
-        "js": ["content.js"],
-        "run_at": "document_end"
-      }
+    "permissions": [
+      "activeTab",
+      "scripting"
     ],
+    "host_permissions": ["*://*/**"],
     "background": {
       "service_worker": "background.js",
       "type": "module"

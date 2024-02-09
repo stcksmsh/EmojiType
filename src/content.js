@@ -1,7 +1,6 @@
-const delim = ":";
-
 /// used for delim, and replacing the word with the emoji
 async function keyReleased(event) {
+    const delim = ":";
     var textElement = event.srcElement;
     if (event.key === delim) {
         var text;
@@ -102,6 +101,7 @@ async function keyReleased(event) {
 /// used for backspace, since we need the character which is being deleted
 async function keyPressed(event) {
     var textElement = event.srcElement;
+    const delim = ":";
 
     if (event.key === "Backspace") {
         var caretPos = textElement.selectionStart;

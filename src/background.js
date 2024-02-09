@@ -32,3 +32,20 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
         sendResponse("success");
     }
 });
+
+function whitelistURL(url) {
+    return true;
+}
+
+function blacklistURL(url) {
+    return false;
+}
+
+chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab){
+    if(whitelistURL(tab.url) && !blacklistURL(tab.url)){
+        chrome.scripting.executeScript({
+                target: { tabId: tab.id },
+                files: ["content.js"]
+              });
+    }
+});
