@@ -13,12 +13,12 @@ async function keyReleased(event) {
             text = textElement.value;
         } else {
             text = textElement.innerHTML;
+            /// the next 4 lines extract the text inside nested tags
+            text = text.split(">");
+            text = text[Math.floor(text.length / 2)];
+            text = text.split("<");
+            text = text[0];
         }
-        /// the next 4 lines extract the text inside nested tags
-        text = text.split(">");
-        text = text[Math.floor(text.length / 2)];
-        text = text.split("<");
-        text = text[0];
 
         /// get position of caret
         var caretPos = textElement.selectionStart;
@@ -29,23 +29,21 @@ async function keyReleased(event) {
             }
             var newText = sequence[0];
             var replaced = false;
-            for (var i = 1; i < sequence.length - 1; i++) { /// start from 1, since the first element is before the first delimiter, and go to the second to last element, since the last element is after the last delimiter
-                if (sequence[i] === "" || sequence[i] === undefined) {
-                    continue;
-                }
+            for (var i = 1; i < sequence.length - 1; i++) {
+                /// start from 1, since the first element is before the first delimiter, and go to the second to last element, since the last element is after the last delimiter
                 var replacement = await checkDictionary(sequence[i]);
                 if (replacement != "" && replacement != undefined) {
                     newText += replacement;
                     replaced = true;
                 } else {
-                    if (!replaced && i > 0) {
+                    if (!replaced) {
                         newText += delim;
                     }
                     newText += sequence[i];
                     replaced = false;
                 }
             }
-            if(sequence[sequence.length - 1] === "" && !replaced){
+            if (sequence[sequence.length - 1] === "" && !replaced) {
                 newText += delim;
             }
             if (newText === undefined) {
