@@ -43,9 +43,10 @@ async function keyReleased(event) {
                     replaced = false;
                 }
             }
-            if (sequence[sequence.length - 1] === "" && !replaced) {
+            if(!replaced){
                 newText += delim;
             }
+            newText += sequence[sequence.length - 1];
             if (newText === undefined) {
                 return;
             }
