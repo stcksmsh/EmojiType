@@ -1,8 +1,38 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Extension Popup</title>
+    <link rel="stylesheet" type="text/css" href="popup.css">
+</head>
 <body>
-    <a href="https://www.flaticon.com/free-icons/happy-face" title="happy face icons">Icons created by NajmunNahar - Flaticon</a>
+    <div class="section">
+        <div class="whitelist-section">
+            <h2>Website Whitelist</h2>
+            <label class="toggle-label" for="whitelist-toggle">Toggle Whitelist</label>
+            <div class="toggle-button" id="whitelist-toggle">OFF</div>
+            <div class="dictionary-container whitelist-container" id="whitelist-container" contenteditable="true"></div>
+            <button id="update-whitelist-btn" class="update-button">Update</button>
+        </div>
+
+        <div class="blacklist-section">
+            <h2>Website Blacklist</h2>
+            <label class="toggle-label" for="blacklist-toggle">Toggle Blacklist</label>
+            <div class="toggle-button" id="blacklist-toggle">OFF</div>
+            <div class="dictionary-container blacklist-container" id="blacklist-container" contenteditable="true"></div>
+            <button id="update-blacklist-btn" class="update-button">Update</button>
+        </div>
+    </div>
+
+    <h2>Extension Dictionary</h2>
+    <div class="section">
+        <div class="dictionary-container" id="dictionary-container" contenteditable="true">
+            <!-- Dictionary items will be dynamically added here -->
+        </div>
+        <button id="update-dictionary-btn" class="update-button">Update</button>
+    </div>
+
+    <script src="popup.js"></script>
 </body>
 </html>

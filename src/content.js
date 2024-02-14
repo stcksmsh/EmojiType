@@ -179,15 +179,15 @@ function setCaretPosition(elem, caretPos) {
 async function checkDictionary(word) {
     var replacement = await chrome.runtime.sendMessage({
         action: "get",
-        word: word,
+        key: word,
     });
     return replacement;
 }
 
 async function checkReverseDictionary(character) {
     var word = await chrome.runtime.sendMessage({
-        action: "reverse",
-        word: character,
+        action: "get",
+        value: character,
     });
     return word;
 }
