@@ -1,21 +1,57 @@
+let defaultDictionary = {
+    "angry": "😠",
+    "blushing": "😊",
+    "clap": "👏",
+    "confounded": "😖",
+    "confused": "😕",
+    "crying": "😢",
+    "disappointed": "😞",
+    "dizzy": "😵",
+    "drooling": "🤤",
+    "fist": "✊",
+    "flushed": "😳",
+    "hug": "🤗",
+    "kiss": "😘",
+    "money": "🤑",
+    "muscle": "💪",
+    "neutral": "😐",
+    "party": "🥳",
+    "plead": "🥺",
+    "rage": "😡",
+    "eye_roll": "🙄",
+    "quiet": "🤫",
+    "zzz": "😴",
+    "snoring": "😪",
+    "smile": "😄",
+    "sob": "😭",
+    "sweat": "😓",
+    "vomit": "🤮"
+};
+
+
+
 var DICT;
 var REVDICT = {};
 
-var whitelistOn = true;
-var whitelist = ["https://www.instagram.com/direct/*"];
-var blacklistOn = false;
-var blacklist = [];
+var whitelistOn;
+var whitelist;
+var blacklistOn;
+var blacklist;
 
 
-fetch("dictionary.json")
-    .then((response) => response.json())
-    .then((json) => {
-        DICT = json;
+chrome.storage.local.get({whitelist: {state: false, value: []}, blacklist: {state: false, value: []}}, function(result) {
+    whitelistOn = result.whitelist.state;
+    whitelist = result.whitelist.value;
+    blacklistOn = result.blacklist.state;
+    blacklist = result.blacklist.value;
+});
 
-        for (let key of Object.keys(DICT)) {
-            REVDICT[DICT[key]] = key;
-        }
-    });
+chrome.storage.local.get({dictionary: defaultDictionary}, function(result) {
+    DICT = result.dictionary;
+    for (let key of Object.keys(DICT)) {
+        REVDICT[DICT[key]] = key;
+    }
+});
 
 /// what requests should look like
 let request = {
