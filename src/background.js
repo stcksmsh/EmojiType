@@ -89,18 +89,22 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
         if(request.key !== undefined && request.value !== undefined){
             DICT[request.key] = request.value;
             REVDICT[request.value] = request.key;
+            chrome.storage.local.set({dictionary: DICT});
             sendResponse("success");
         }else if(request.whitelist !== undefined){
             whitelist = request.whitelist;
+            chrome.storage.local.set({whitelist: {state: whitelistOn, value: whitelist}});
             sendResponse("success");
         }else if(request.blacklist !== undefined){
             blacklist = request.blacklist;
+            chrome.storage.local.set({blacklist: {state: blacklistOn, value: blacklist}});
             sendResponse("success");
         }else if(request.dictionary !== undefined){
             DICT = request.dictionary;
             for (let key of Object.keys(DICT)) {
                 REVDICT[DICT[key]] = key;
             }
+            chrome.storage.local.set({dictionary: DICT});
             sendResponse("success");
         }
         else{
