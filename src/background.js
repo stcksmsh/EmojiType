@@ -145,10 +145,12 @@ function IsUrlBlacklisted(url) {
     return false;
 }
 
+
 chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab){
+    console.log(changeInfo);
     if(IsUrlWhitelisted(tab.url) && !IsUrlBlacklisted(tab.url)){
         chrome.scripting.executeScript({
-                target: { tabId: tab.id },
+                target: { tabId: tabId },
                 files: ["content.js"]
               });
     }

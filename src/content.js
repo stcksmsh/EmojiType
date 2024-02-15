@@ -1,10 +1,10 @@
+const delim = ":";
 /// used for delim, and replacing the word with the emoji
 async function keyReleased(event) {
-    const delim = ":";
-    var textElement = event.srcElement;
     if (event.key === delim) {
+        var textElement = event.srcElement;
         var text;
-
+        
         if (
             textElement.tagName === "TEXTAREA" ||
             textElement.tagName === "INPUT" ||
@@ -19,11 +19,14 @@ async function keyReleased(event) {
             text = text.split("<");
             text = text[0];
         }
-
         /// get position of caret
         var caretPos = textElement.selectionStart;
         if (caretPos === undefined) {
             var sequence = text.split(delim); /// get the sequence of words separated by the delimiter
+            /// try to get the whole thing then?
+            if(sequence.length < 2){
+                sequence = textElement.innerHTML.split(delim);
+            }
             if (sequence.length < 2) {
                 return; /// there should be at least two delimiters
             }
@@ -100,7 +103,6 @@ async function keyReleased(event) {
 /// used for backspace, since we need the character which is being deleted
 async function keyPressed(event) {
     var textElement = event.srcElement;
-    const delim = ":";
 
     if (event.key === "Backspace") {
         var caretPos = textElement.selectionStart;
@@ -136,8 +138,8 @@ async function keyPressed(event) {
         }
         var character = codePointArray[codeCharPos - 1];
         var replacement = await checkReverseDictionary(character);
-        Promise.resolve(replacement);
-        if (replacement != "") {
+        console.log(replacement, character, codeCharPos, caretPos);
+        if (replacement != "" && replacement != undefined) {
             text =
                 codePointArray.slice(0, codeCharPos - 1).join("") +
                 delim +
