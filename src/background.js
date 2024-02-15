@@ -38,6 +38,8 @@ var whitelist;
 var blacklistOn;
 var blacklist;
 
+var delim;
+
 
 chrome.storage.local.get({whitelist: {state: false, value: []}, blacklist: {state: false, value: []}}, function(result) {
     whitelistOn = result.whitelist.state;
@@ -53,6 +55,11 @@ chrome.storage.local.get({dictionary: defaultDictionary}, function(result) {
     }
 });
 
+chrome.storage.local.get({delim: ":"}, function(result) {
+    delim = result.delim;
+});
+
+
 /// what requests should look like
 let request = {
     "action": "get/set", 
@@ -62,7 +69,8 @@ let request = {
     "blacklist": {state: "on/off", value:["https://example.com/*"]},
     "dictionary": {
         "hello": "world"
-    }
+    },
+    "delim": ":"
 };
 
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
@@ -82,6 +90,8 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
             sendResponse(response);
         }else if(request.dictionary !== undefined){
             sendResponse(DICT);
+        }else if(request.delim !== undefined){
+            sendResponse(delim);
         }else{
             sendResponse("");
         }
@@ -106,8 +116,11 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
             }
             chrome.storage.local.set({dictionary: DICT});
             sendResponse("success");
-        }
-        else{
+        }else if(request.delim !== undefined){
+            delim = request.delim;
+            chrome.storage.local.set({delim: delim});
+            sendResponse("success");
+        }else{
             sendResponse("");
         }
     }else{
