@@ -2,7 +2,7 @@
     "manifest_version": 3,
     "name": "Emoji Type",
     "description": "Allows you to type emojis in any text field by replacing specific text with emojis.",
-    "version": "1.08",
+    "version": "1.09.01",
     "icons": {
         "16": "images/icon16.png",
         "24": "images/icon24.png",

@@ -1,1 +1,2 @@
-<a href="https://www.flaticon.com/free-icons/happy-face" title="happy face icons">Icons created by NajmunNahar - Flaticon</a>
+<a href="https://www.flaticon.com/free-icons/happy-face" title="happy face icons">Icons created by NajmunNahar - Flaticon</a><br>
+Background image on google chrome store by <a href="https://www.freepik.com/free-vector/hand-drawn-world-emoji-day-background-with-emoticons_28011899.htm#query=emoji%20background&position=1&from_view=keyword&track=ais&uuid=8a7b32e8-c103-460b-b418-08e058ae5253">Freepik</a>
