@@ -34,18 +34,19 @@ var DICT;
 var REVDICT = {};
 
 var whitelistOn;
-var whitelist;
+var whitelistValue;
 var blacklistOn;
-var blacklist;
+var blacklistValue;
 
 var delim;
 
 
-chrome.storage.local.get({whitelist: {state: false, value: []}, blacklist: {state: false, value: []}}, function(result) {
+chrome.storage.local.get({whitelist: {state: false, value: []}, blacklist: {state: false, value: []}}, result => {
     whitelistOn = result.whitelist.state;
-    whitelist = result.whitelist.value;
+    whitelistValue = result.whitelist.value;
     blacklistOn = result.blacklist.state;
-    blacklist = result.blacklist.value;
+    blacklistValue = result.blacklist.value;
+    console.log(whitelistOn + " " + whitelistValue + " " + blacklistOn + " " + blacklistValue);
 });
 
 chrome.storage.local.get({dictionary: defaultDictionary}, function(result) {
@@ -83,10 +84,12 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
             let response = REVDICT[request.value];
             sendResponse(response);
         }else if(request.whitelist !== undefined){
-            let response = {state: whitelistOn, value: whitelist};
+            let response = {state: whitelistOn, value: whitelistValue};
+            // let response = whitelistValue;
             sendResponse(response);
         }else if(request.blacklist !== undefined){
-            let response = {state: blacklistOn, value: blacklist};
+            let response = {state: blacklistOn, value: blacklistValue};
+            // let response = blacklistValue;
             sendResponse(response);
         }else if(request.dictionary !== undefined){
             sendResponse(DICT);
@@ -102,12 +105,14 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
             chrome.storage.local.set({dictionary: DICT});
             sendResponse("success");
         }else if(request.whitelist !== undefined){
-            whitelist = request.whitelist;
-            chrome.storage.local.set({whitelist: {state: whitelistOn, value: whitelist}});
+            whitelistValue = request.whitelist.value;
+            whitelistOn = request.whitelist.state;
+            chrome.storage.local.set({whitelist: {state: whitelistOn, value: whitelistValue}});
             sendResponse("success");
         }else if(request.blacklist !== undefined){
-            blacklist = request.blacklist;
-            chrome.storage.local.set({blacklist: {state: blacklistOn, value: blacklist}});
+            blacklistValue = request.blacklist.value;
+            blacklistOn = request.blacklist.state;
+            chrome.storage.local.set({blacklist: {state: blacklistOn, value: blacklistValue}});
             sendResponse("success");
         }else if(request.dictionary !== undefined){
             DICT = request.dictionary;
@@ -133,7 +138,7 @@ function IsUrlWhitelisted(url) {
         return false;
     }
     if(whitelistOn){
-        for (let pattern of whitelist) {
+        for (let pattern of whitelistValue) {
             if (url.match(pattern)) {
                 return true;
             }
@@ -148,7 +153,7 @@ function IsUrlBlacklisted(url) {
         return false;
     }
     if(blacklistOn){
-        for (let pattern of blacklist) {
+        for (let pattern of blacklistValue) {
             if (url.match(pattern)) {
                 return true;
             }
@@ -160,7 +165,6 @@ function IsUrlBlacklisted(url) {
 
 
 chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab){
-    console.log(changeInfo);
     if(IsUrlWhitelisted(tab.url) && !IsUrlBlacklisted(tab.url)){
         chrome.scripting.executeScript({
                 target: { tabId: tabId },

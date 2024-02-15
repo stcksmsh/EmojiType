@@ -1,6 +1,6 @@
-const delim = ":";
 /// used for delim, and replacing the word with the emoji
 async function keyReleased(event) {
+    var delim = await getDelimiter();
     if (event.key === delim) {
         var textElement = event.srcElement;
         var text;
@@ -102,9 +102,9 @@ async function keyReleased(event) {
 
 /// used for backspace, since we need the character which is being deleted
 async function keyPressed(event) {
-    var textElement = event.srcElement;
-
     if (event.key === "Backspace") {
+        var delim = await getDelimiter();
+        var textElement = event.srcElement;
         var caretPos = textElement.selectionStart;
         if (caretPos === undefined) {
             return; /// if caret position is not available, we can't really do anything
@@ -192,6 +192,15 @@ async function checkReverseDictionary(character) {
         value: character,
     });
     return word;
+}
+
+async function getDelimiter(){
+    var delim = await chrome.runtime.sendMessage({
+        action: "get",
+        delim: true
+    });
+    return delim;
+
 }
 
 document.addEventListener("keyup", keyReleased);
