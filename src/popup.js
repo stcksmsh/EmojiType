@@ -43,9 +43,26 @@ function initDictionary() {
     var container = document.getElementById('dictionary-container');
     container.innerHTML = '';
     for (var key in dictionary) {
-        var div = document.createElement('div');
-        div.innerText = key + ' - ' + dictionary[key];
-        container.appendChild(div);
+        var pairDiv = document.createElement('div');
+        pairDiv.className = "dictionary-pair";
+        
+        var keyDiv = document.createElement('div');
+        keyDiv.className = "dictionary-key";
+        keyDiv.innerHTML = key;
+        pairDiv.appendChild(keyDiv);
+
+        var valueDiv = document.createElement('div');
+        valueDiv.className = "dictionary-key";
+        valueDiv.innerHTML = dictionary[key];
+        pairDiv.appendChild(valueDiv);
+
+        var deleteButton = document.createElement('button');
+        deleteButton.innerHTML = "X";
+        deleteButton.className = "delete-item";
+        deleteButton.addEventListener('click', deleteItem);
+        pairDiv.appendChild(deleteButton);
+
+        container.appendChild(pairDiv);
     }
 }
 
@@ -104,19 +121,31 @@ function updateDelimiter() {
     chrome.runtime.sendMessage({action: "set", delim: delimiter});
 }
 
+function deleteItem(event){
+    var button = event.target || event.sourceElement;
+    console.log(button);
+    var pair = button.parentElement;
+    console.log(pair);
+    delete dictionary[pair.children[0].innerHTML]; // remove the element
+    pair.remove();
+    console.log(dictionary);
+    chrome.runtime.sendMessage({action: "set", dictionary:dictionary});
+}
+
 // Function to update dictionary items
 function updateDictionaryItems() {
     // Get the dictionary container
     var container = document.getElementById('dictionary-container');
     // get all the divs inside the container
-    var divs = container.getElementsByTagName('div');
+    var pairs = container.getElementsByClassName('dictionary-pair');
     // create an empty object to store the items
     var items = {};
     // iterate over the divs
-    for (var i = 0; i < divs.length; i++) {
+    for (var i = 0; i < pairs.length; i ++) {
         // split the innerText of the div by ' - ' and push it to the items object
-        var parts = divs[i].innerText.split(' - ');
-        items[parts[0]] = parts[1];
+        var key = pairs[i].children[0].innerHTML;
+        var value = pairs[i].children[1].innerHTML;
+        items[key] = value;
     }
     // Send message to background.js to update the dictionary
     chrome.runtime.sendMessage({action: "set", dictionary: items});
