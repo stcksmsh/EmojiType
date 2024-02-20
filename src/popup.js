@@ -73,24 +73,26 @@ function initDictionary() {
 function toggleWhitelist(){
     var whitelistToggle = document.getElementById('whitelist-toggle');
     whitelistToggle.classList.toggle('active');
-    if (whitelistToggle.innerText === 'ON') {
-        whitelistToggle.innerText = 'OFF';
+    if (whitelistState === 'on') {
+        whitelistState = 'off';
     } else {
-        whitelistToggle.innerText = 'ON';
+        whitelistState = 'on';
     }
-    chrome.runtime.sendMessage({action: "set", whitelist: {state: whitelistToggle.innerText.toLowerCase(), value: whitelistValue}});
+    whitelistToggle.innerText = whitelistState.toUpperCase();
+    chrome.runtime.sendMessage({action: "set", whitelist: {state: whitelistState, value: whitelistValue}});
 }
 
 // Function to toggle blacklist
 function toggleBlacklist() {
     var blacklistToggle = document.getElementById('blacklist-toggle');
     blacklistToggle.classList.toggle('active');
-    if (blacklistToggle.innerText === 'ON') {
-        blacklistToggle.innerText = 'OFF';
+    if (blacklistState === 'off') {
+        blacklistState = 'on';
     } else {
-        blacklistToggle.innerText = 'ON';
+        blacklistState = 'off';
     }
-    chrome.runtime.sendMessage({action: "set", blacklist: {state: blacklistToggle.innerText.toLowerCase(), value: blacklistValue}});
+    blacklistToggle.innerText = blacklistState.toUpperCase();
+    chrome.runtime.sendMessage({action: "set", blacklist: {state: blacklistState, value: blacklistValue}});
 }
 
 // Function to update whitelist items
@@ -98,7 +100,11 @@ function updateWhitelistItems() {
     // Get the whitelist container
     var container = document.getElementById('whitelist-container');
     // Get the innerText of the container and split it by '\n'
-    whitelistValue = container.innerText.split('\n');
+    let divs = container.getElementsByTagName('div');
+    whitelistValue = [];
+    for(var i = 0; i < divs.length; i++){
+        whitelistValue.push(divs[i].innerText);
+    }
     // Send message to background.js to update the whitelist
     chrome.runtime.sendMessage({action: "set", whitelist: {state: whitelistState, value: whitelistValue}});
 }
@@ -108,7 +114,11 @@ function updateBlacklistItems() {
     // Get the blacklist container
     var container = document.getElementById('blacklist-container');
     // Get the innerText of the container and split it by '\n'
-    blacklistValue = container.innerText.split('\n');
+    let divs = container.getElementsByTagName('div');
+    blacklistValue = [];
+    for(var i = 0; i < divs.length; i++){
+        blacklistValue.push(divs[i].innerText);
+    }
     // Send message to background.js to update the blacklist
     chrome.runtime.sendMessage({action: "set", blacklist: {state: blacklistState, value: blacklistValue}});
 }
@@ -126,12 +136,9 @@ function updateDelimiter() {
 
 function deleteItem(event){
     var button = event.target || event.sourceElement;
-    console.log(button);
     var pair = button.parentElement;
-    console.log(pair);
     delete dictionary[pair.children[0].innerHTML]; // remove the element
     pair.remove();
-    console.log(dictionary);
     chrome.runtime.sendMessage({action: "set", dictionary:dictionary});
 }
 
@@ -140,14 +147,19 @@ function updateDictionaryItems() {
     // Get the dictionary container
     var container = document.getElementById('dictionary-container');
     // get all the divs inside the container
-    var pairs = container.getElementsByClassName('dictionary-element');
+    var elements = container.getElementsByClassName('dictionary-element');
     // create an empty object to store the items
     var items = {};
     // iterate over the divs
-    for (var i = 0; i < pairs.length; i ++) {
+    for (var i = 0; i < elements.length; i ++) {
         // split the innerText of the div by ' - ' and push it to the items object
-        var key = pairs[i].children[0].innerHTML;
-        var value = pairs[i].children[1].innerHTML;
+        var key = elements[i].children[0].innerHTML;
+        var value = elements[i].children[1].innerHTML;
+        if(key === "" || value === ""){
+            elements[i].remove();// remove the element
+            i--;// decrement the counter (since we removed an element, the next element will take its place, so we need to check the current index again)
+            continue;
+        }
         items[key] = value;
     }
     // Send message to background.js to update the dictionary
@@ -155,11 +167,43 @@ function updateDictionaryItems() {
 }
 
 
+function addNewDictionaryItem(event){
+    if(event.key === "Enter"){
+        event.preventDefault(); // prevent the default action, make sure the newline character is not added
+
+        var sourceDiv = event.target || event.srcElement; // get the source of the event, which is either a dictionary-key or dictionary-value
+        var parentElement = sourceDiv.parentElement; // get the parent element of the source
+        var dictionaryContainer = document.getElementById('dictionary-container'); // get the dictionary container        
+
+        var newPair = document.createElement('div'); // create a new pair
+        newPair.className = "dictionary-element"; // add the class name
+        
+        var newKey = document.createElement('div'); // create a new key div
+        newKey.className = "dictionary-key"; // add the class name
+        newKey.contentEditable = true; // make it content editable
+        newKey.innerHTML = ""; // set the innerHTML to empty
+        
+        var newValue = document.createElement('div'); // create a new value div
+        newValue.className = "dictionary-value"; // add the class name
+        newValue.contentEditable = true; // make it content editable
+        newValue.innerHTML = ""; // set the innerHTML to empty
+        
+        var deleteButton = document.createElement('button'); // create a delete button
+        deleteButton.innerHTML = "X"; // set the innerHTML to X
+        deleteButton.className = "dictionary-delete"; // add the class name
+        deleteButton.addEventListener('click', deleteItem); // add the event listener
+        
+        newPair.appendChild(newKey); // append the key to the pair
+        newPair.appendChild(newValue); // append the value to the pair
+        newPair.appendChild(deleteButton); // append the delete button to the pair
+        
+        dictionaryContainer.insertBefore(newPair, parentElement.nextSibling); // insert the new pair after the source
+    };
+}
+
 async function init(){
     whitelistValue = await chrome.runtime.sendMessage({action: "get", whitelist: true});
-    console.log(whitelistValue);
     blacklistValue = await chrome.runtime.sendMessage({action: "get", blacklist: true});
-    console.log(blacklistValue);
     whitelistState = whitelistValue.state;
     whitelistValue = whitelistValue.value;
     blacklistState = blacklistValue.state;
@@ -173,9 +217,7 @@ async function init(){
         document.getElementById('blacklist-toggle').innerText = "ON";
     }
     delimiter = await chrome.runtime.sendMessage({action: "get", delim: true});
-    console.log(delimiter);
     dictionary = await chrome.runtime.sendMessage({action: "get", dictionary: true});
-    console.log(dictionary);
     // Initial update
     initWhitelist();
     initBlacklist();
@@ -193,6 +235,8 @@ async function init(){
     document.getElementById('update-delimiter-btn').addEventListener('click', updateDelimiter);
 
     document.getElementById('update-dictionary-btn').addEventListener('click', updateDictionaryItems);
+
+    document.getElementById('dictionary-container').addEventListener('keydown', addNewDictionaryItem);
     
 }
 

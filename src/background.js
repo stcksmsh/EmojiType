@@ -46,7 +46,6 @@ chrome.storage.local.get({whitelist: {state: false, value: []}, blacklist: {stat
     whitelistValue = result.whitelist.value;
     blacklistOn = result.blacklist.state;
     blacklistValue = result.blacklist.value;
-    console.log(whitelistOn + " " + whitelistValue + " " + blacklistOn + " " + blacklistValue);
 });
 
 chrome.storage.local.get({dictionary: defaultDictionary}, function(result) {
@@ -75,7 +74,6 @@ let request = {
 };
 
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
-    console.log(request);
     if (request.action === "get") {
         if(request.key !== undefined){
             let response = DICT[request.key];
@@ -137,7 +135,7 @@ function IsUrlWhitelisted(url) {
     if(url == undefined){
         return false;
     }
-    if(whitelistOn){
+    if(whitelistOn == "on"){
         for (let pattern of whitelistValue) {
             if (url.match(pattern)) {
                 return true;
@@ -152,7 +150,7 @@ function IsUrlBlacklisted(url) {
     if(url == undefined){
         return false;
     }
-    if(blacklistOn){
+    if(blacklistOn == "on"){
         for (let pattern of blacklistValue) {
             if (url.match(pattern)) {
                 return true;
@@ -163,12 +161,16 @@ function IsUrlBlacklisted(url) {
     return false;
 }
 
-
-chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab){
+function initiateContentScript(tab, changeInfo, tabId){
+    if(changeInfo.status != "complete"){
+        return;
+    }/// if the page is not fully loaded, don't do anything
     if(IsUrlWhitelisted(tab.url) && !IsUrlBlacklisted(tab.url)){
         chrome.scripting.executeScript({
-                target: { tabId: tabId },
-                files: ["content.js"]
-              });
+            target: { tabId: tabId },
+            files: ["content.js"]
+        });
     }
-});
+}
+
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {initiateContentScript(tab, changeInfo, tabId)});

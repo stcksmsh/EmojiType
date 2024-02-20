@@ -138,7 +138,6 @@ async function keyPressed(event) {
         }
         var character = codePointArray[codeCharPos - 1];
         var replacement = await checkReverseDictionary(character);
-        console.log(replacement, character, codeCharPos, caretPos);
         if (replacement != "" && replacement != undefined) {
             text =
                 codePointArray.slice(0, codeCharPos - 1).join("") +
