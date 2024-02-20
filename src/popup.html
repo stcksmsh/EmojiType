@@ -7,46 +7,40 @@
     <link rel="stylesheet" type="text/css" href="popup.css">
 </head>
 <body>
-    <div class="section">
-        <div class="whitelist-section">
+    
+    <div class="upper-section">
+        <div class = "list-section">
             <h2>Website Whitelist</h2>
             <label class="toggle-label" for="whitelist-toggle">Toggle Whitelist</label>
             <div class="toggle-button" id="whitelist-toggle">OFF</div>
-            <div class="dictionary-container whitelist-container" id="whitelist-container" contenteditable="true"></div>
+            <br>
+            <div class="whitelist-container container" id="whitelist-container" contenteditable="true"></div>
             <br>
             <button id="update-whitelist-btn" class="update-button">Update</button>
         </div>
-        
-        <div class="delimiter-section">
+        <div class = "delimiter-section">
             <h2>Delimiter</h2>
             <br>
-            <br>
-            <br>
-            <div class="dictionary-container delimiter-container" id="delimiter-container" contenteditable="true"></div>
-            <br>
+            <div class="container delimiter-container" id="delimiter-container" contenteditable="true"></div>
             <button id="update-delimiter-btn" class="update-button">Update</button>
         </div>
-
-        <div class="blacklist-section">
+        <div class = "list-section">
             <h2>Website Blacklist</h2>
             <label class="toggle-label" for="blacklist-toggle">Toggle Blacklist</label>
             <div class="toggle-button" id="blacklist-toggle">OFF</div>
-            <div class="dictionary-container blacklist-container" id="blacklist-container" contenteditable="true"></div>
+            <br>
+            <div class="blacklist-container container" id="blacklist-container" contenteditable="true"></div>
             <br>
             <button id="update-blacklist-btn" class="update-button">Update</button>
         </div>
-
-        
     </div>
-    
-        
-    <h2 style="text-align:center;">Extension Dictionary</h2>
-    <div class="section" style="justify-content: center;">
-        <div class="dictionary-container" id="dictionary-container" contenteditable="true">
-            <!-- <div class="dictionary-pair"><div class="dictionary-key">one</div><div class = "dictionary-key">1</div><button class="delete-item">X</button></div>
-            <div class="dictionary-pair"><div class="dictionary-key">two</div><div class = "dictionary-key">2</div></div> -->
+    <div class="lower-section">
+        <div class="list-section">
+            <h2>Extension Dictionary</h2>
+            <div class="container dictionary-container" id="dictionary-container"></div>
+            <button id="update-dictionary-btn" class="update-button" style="margin-left:20px;">Update</button>
         </div>
-        <button id="update-dictionary-btn" class="update-button" style="margin-left:20px;">Update</button>
+    </div>
 
     <script src="popup.js"></script>
 </body>

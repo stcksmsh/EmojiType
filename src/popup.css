@@ -1,21 +1,127 @@
+html{
+    height: 100%;
+    width: 100%;
+}
+
 body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 20px;
-    background-color: #dfdfdfde;
-}
-
-h2 {
-    margin-top: 0;
-}
-
-.section {
-    margin-bottom: 20px;
+    background-color: #dfdfdf;
     display: flex;
-    /* flex-direction: column;     */
-    justify-content:space-evenly;
+    flex-direction: column;
     width: 600px;
+    height: 550px;
 }
+
+.upper-section {
+    flex: 3;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-evenly;
+    padding-bottom: 20px;
+}
+
+.lower-section {
+    flex: 4;
+    display: flex;
+    justify-content: space-evenly;
+}
+
+.list-section {
+    flex: 3;
+    display: flex;
+    flex-direction: column;
+    justify-content:space-between;
+    align-items: center;
+}
+
+.delimiter-section {
+    flex: 2;
+    display: flex;
+    flex-direction: column;
+    justify-content:space-between;
+    align-items: center;
+}
+
+.container{
+    display: flex;
+    flex-direction: column;
+    background-color: #e9e9e9;
+    border: 1px solid #999;
+    border-radius: 5px;
+    padding: 5px;
+
+}
+
+.dictionary-container {
+    width: 400px;
+    max-height: 200px;
+    padding: 10px;
+    overflow-y: auto
+}
+
+.dictionary-element{
+    padding: 5px;
+    border-bottom: 1px solid #999;
+    /* border-top: 1px solid #000; */
+    display:    grid;
+    grid-template-columns: 3fr 1fr 1fr;
+    column-gap: 10px;
+}
+
+.whitelist-container, .blacklist-container {
+    min-width: 100px;
+    min-height: 50px;
+    justify-content: start;
+    align-items: start;
+}
+
+.delimiter-container{
+    min-width: 50px;
+    min-height: 20px;
+    justify-content: center;
+    align-items: center;
+}
+
+
+.dictionary-key{
+    background-color: #e9e9e9;
+    width: fit-content;
+    border: 1px solid #808080;
+    border-radius: 5px;
+    padding: 5px 20px;
+}
+
+.dictionary-value{
+    background-color: #e9e9e9;
+    width: fit-content;
+    border: 1px solid #808080;
+    border-radius: 5px;
+    padding: 5px;
+}
+
+.dictionary-delete{
+    justify-self: end;
+    cursor: pointer;
+    padding: 0;
+    width: 45px;
+    /* height: 40px; */
+    margin-bottom: 5px;
+    background-color: #ff9456;
+    border-radius: 20px;
+    position: relative;
+    /* display: inline-block; */
+    /* text-align: center; */
+    /* line-height: 26px; */
+    color: #555;
+    font-weight: bold;
+    transition: background-color 0.2s, transform 0.2s;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
 
 .toggle-button {
     cursor: pointer;
@@ -59,78 +165,6 @@ h2 {
     background-color: #0056b3;
 }
 
-.dictionary-container {
-    margin-top: 10px;
-    border: 1px solid #ccc;
-    padding: 10px;
-    border-radius: 4px;
-    /* width: 100%; */
-    /* background-color: #fff; */
-    color: #333;
-    max-height: 200px; /* Adjust the maximum height as needed */
-    overflow-y: auto; /* Enable vertical scrollbar when content overflows */
-    display: flex;
-    flex-direction: column;
-    margin-right: 20px;
-}
-
-.dictionary-pair{
-    flex: 1;
-    display: flex;
-    flex-direction: row;
-    /* align-content: space-between; */
-    justify-content: space-between;
-    margin: 5px;
-    min-width: 300px;
-
-}
-
-.dictionary-key{
-    background-color:#ffffff;
-    border: 1px solid #000000;
-    border-radius: 5px;
-    padding: 5px 20px;
-    margin-right: 10px;
-}
-
-.dictionary-value{
-    background-color:#ffffff;
-    border: 1px solid #000000;
-    border-radius: 5px;
-    padding: 5px;
-    margin-left: 10px;
-}
-
-.delete-item{
-    cursor: pointer;
-    padding: 0;
-    width: 50px;
-    height: 26px;
-    background-color: #d62e2e;
-    border-radius: 20px;
-    position: relative;
-    display: inline-block;
-    text-align: center;
-    line-height: 26px;
-    color: #555;
-    font-weight: bold;
-    transition: background-color 0.2s, transform 0.2s;
-}
-
-.delimiter-container{
-    /*make it fit contents*/
-    width: fit-content;
-}
-
-.whitelist-section,
-.blacklist-section,
-.delimiter-section {
-    margin: 20px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-}
 
 ::-webkit-scrollbar {
     width: 20px;

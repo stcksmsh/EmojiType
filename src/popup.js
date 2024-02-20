@@ -44,7 +44,7 @@ function initDictionary() {
     container.innerHTML = '';
     for (var key in dictionary) {
         var pairDiv = document.createElement('div');
-        pairDiv.className = "dictionary-pair";
+        pairDiv.className = "dictionary-element";
         
         var keyDiv = document.createElement('div');
         keyDiv.className = "dictionary-key";
@@ -52,15 +52,18 @@ function initDictionary() {
         pairDiv.appendChild(keyDiv);
 
         var valueDiv = document.createElement('div');
-        valueDiv.className = "dictionary-key";
+        valueDiv.className = "dictionary-value";
         valueDiv.innerHTML = dictionary[key];
         pairDiv.appendChild(valueDiv);
 
         var deleteButton = document.createElement('button');
         deleteButton.innerHTML = "X";
-        deleteButton.className = "delete-item";
+        deleteButton.className = "dictionary-delete";
         deleteButton.addEventListener('click', deleteItem);
         pairDiv.appendChild(deleteButton);
+
+        keyDiv.contentEditable = true;
+        valueDiv.contentEditable = true;
 
         container.appendChild(pairDiv);
     }
@@ -137,7 +140,7 @@ function updateDictionaryItems() {
     // Get the dictionary container
     var container = document.getElementById('dictionary-container');
     // get all the divs inside the container
-    var pairs = container.getElementsByClassName('dictionary-pair');
+    var pairs = container.getElementsByClassName('dictionary-element');
     // create an empty object to store the items
     var items = {};
     // iterate over the divs
@@ -178,6 +181,8 @@ async function init(){
     initBlacklist();
     initDelimiter();
     initDictionary();
+
+    let dictionaryContainer = document.getElementById('dictionary-container');
     
     // Add event listeners after the fact
     document.getElementById('whitelist-toggle').addEventListener('click', toggleWhitelist);
