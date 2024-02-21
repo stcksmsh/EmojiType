@@ -13,9 +13,17 @@ function initWhitelist() {
     container.innerHTML = '';
     whitelistValue.forEach(function(item) {
         var div = document.createElement('div');
+        div.className = "list-element";
         div.innerText = item;
         container.appendChild(div);
     });
+    /// Add an empty element if the whitelist is empty
+    if(whitelistValue.length === 0){
+        var div = document.createElement('div');
+        div.className = "list-element";
+        div.innerText = "";
+        container.appendChild(div);
+    }
 }
 
 // Function to update blacklist container
@@ -24,18 +32,23 @@ function initBlacklist() {
     container.innerHTML = '';
     blacklistValue.forEach(function(item) {
         var div = document.createElement('div');
+        div.className = "list-element";
         div.innerText = item;
         container.appendChild(div);
     });
+    /// Add an empty element if the blacklist is empty
+    if(blacklistValue.length === 0){
+        var div = document.createElement('div');
+        div.className = "list-element";
+        div.innerText = "";
+        container.appendChild(div);
+    }
 }
 
 function initDelimiter() {
     var container = document.getElementById('delimiter-container');
     container.innerHTML = '';
     container.innerText = delimiter;
-    // var div = document.createElement('div');
-    // div.innerText = delimiter;
-    // container.appendChild(div);
 }
 
 // Function to update dictionary
@@ -103,6 +116,9 @@ function updateWhitelistItems() {
     let divs = container.getElementsByTagName('div');
     whitelistValue = [];
     for(var i = 0; i < divs.length; i++){
+        if(divs[i].innerText === ""){
+            continue;
+        }
         whitelistValue.push(divs[i].innerText);
     }
     // Send message to background.js to update the whitelist
@@ -117,6 +133,9 @@ function updateBlacklistItems() {
     let divs = container.getElementsByTagName('div');
     blacklistValue = [];
     for(var i = 0; i < divs.length; i++){
+        if(divs[i].innerText === ""){
+            continue;
+        }
         blacklistValue.push(divs[i].innerText);
     }
     // Send message to background.js to update the blacklist
@@ -236,8 +255,7 @@ async function init(){
 
     document.getElementById('update-dictionary-btn').addEventListener('click', updateDictionaryItems);
 
-    document.getElementById('dictionary-container').addEventListener('keydown', addNewDictionaryItem);
-    
+    document.getElementById('dictionary-container').addEventListener('keydown', addNewDictionaryItem);    
 }
 
 document.addEventListener('DOMContentLoaded', init, false);

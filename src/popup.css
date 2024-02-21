@@ -54,6 +54,34 @@ body {
 
 }
 
+.whitelist-container, .blacklist-container {
+    min-width: 150px;
+    min-height: 50px;
+    justify-content: start;
+    align-items: start;
+    max-height: 75px;
+    overflow-y: auto;
+}
+
+.list-element{
+    border-bottom: 1px solid #999;
+    width: 100%;
+    display:    grid;
+    grid-template-columns: 3fr 1fr;
+    column-gap: 10px;
+}
+
+.list-element:last-child{
+    border-bottom: none;
+}
+
+.delimiter-container{
+    min-width: 50px;
+    min-height: 20px;
+    justify-content: center;
+    align-items: center;
+}
+
 .dictionary-container {
     width: 400px;
     max-height: 200px;
@@ -70,20 +98,9 @@ body {
     column-gap: 10px;
 }
 
-.whitelist-container, .blacklist-container {
-    min-width: 150px;
-    min-height: 50px;
-    justify-content: start;
-    align-items: start;
+.dictionary-element:last-child{
+    border-bottom: none;
 }
-
-.delimiter-container{
-    min-width: 50px;
-    min-height: 20px;
-    justify-content: center;
-    align-items: center;
-}
-
 
 .dictionary-key{
     background-color: #e9e9e9;
