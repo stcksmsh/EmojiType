@@ -19,19 +19,39 @@ async function keyUp(event) {
             return; /// there should be at least two delimiters for a hotword to be between them
         }
 
-        var word = text.slice(0, caretPos - 1).split(delim).pop(); /// get the word before the caret
+        console.log(text, sequence);
 
-        var replacement = await checkDictionary(word);
-        if (replacement === "" || replacement === undefined || replacement === null) {
+        var newText = sequence[0];
+        var replaced = false;
+        for (var i = 1; i < sequence.length - 1; i++) {
+            /// start from 1, since the first element is before the first delimiter, and go to the second to last element, since the last element is after the last delimiter
+            var replacement = await checkDictionary(sequence[i]);
+            console.log(sequence[i]);
+            if (replacement != "" && replacement != undefined) {
+                console.log(replacement);
+                newText += replacement;
+                replaced = true;
+                // codeCharPos -= sequence[i].length + 2 - replacement.length;
+                caretPos -= sequence[i].length + 2 - replacement.length;
+            } else {
+                if (!replaced) {
+                    newText += delim;
+                }
+                newText += sequence[i];
+                replaced = false;
+            }
+        }
+        if(!replaced){
+            newText += delim;
+        }
+        newText += sequence[sequence.length - 1];
+        if (newText === undefined) {
             return;
         }
-        var newText = text.slice(0, caretPos - word.length - 2) + replacement + text.slice(caretPos);
-
+        console.log(newText);
         document.execCommand("selectAll", false, null);
         document.execCommand("insertHTML", false, newText);
-        await new Promise(r => setTimeout(r, 5));
-        console.log(caretPos, replacement.length, word.length, caretPos - word.length - 2 + replacement.length);
-        setCaretPosition(caretPos - word.length - 2 + replacement.length);
+        setCaretPosition(caretPos);
     }
 }
 
@@ -68,6 +88,7 @@ async function keyDown(event) {
                 codePointArray.slice(codeCharPos).join("");
             document.execCommand("selectAll", false, null);
             document.execCommand("insertHTML", false, text);
+            // await new Promise(r => setTimeout(r, 10));
             setCaretPosition(caretPos - character.length + replacement.length + 1);
         }
     }
