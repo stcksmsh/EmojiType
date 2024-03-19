@@ -1,110 +1,52 @@
+var delim = ';';
+getDelimiter().then((value) => {
+    delim = value;
+});
+
 /// used for delim, and replacing the word with the emoji
-async function keyReleased(event) {
-    var delim = await getDelimiter();
+async function keyUp(event) {
     if (event.key === delim) {
         var textElement = event.srcElement;
         var text = textElement.innerText;
-        textElement = document.evaluate("//*[text() = '" + text + "']", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+        textElement = document.evaluate("//*[text() = '" + escape(text) + "']", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
         /// get position of caret
         var selection = window.getSelection();
         var caretPos = selection.anchorOffset;
 
-        // return;
-        if (caretPos === undefined) {
-            var sequence = text.split(delim); /// get the sequence of words separated by the delimiter
-            /// try to get the whole thing then?
-            if(sequence.length < 2){
-                sequence = textElement.innerHTML.split(delim);
-            }
-            if (sequence.length < 2) {
-                return; /// there should be at least two delimiters
-            }
-            var newText = sequence[0];
-            var replaced = false;
-            for (var i = 1; i < sequence.length - 1; i++) {
-                /// start from 1, since the first element is before the first delimiter, and go to the second to last element, since the last element is after the last delimiter
-                var replacement = await checkDictionary(sequence[i]);
-                if (replacement != "" && replacement != undefined) {
-                    newText += replacement;
-                    replaced = true;
-                } else {
-                    if (!replaced) {
-                        newText += delim;
-                    }
-                    newText += sequence[i];
-                    replaced = false;
-                }
-            }
-            if(!replaced){
-                newText += delim;
-            }
-            newText += sequence[sequence.length - 1];
-            if (newText === undefined) {
-                return;
-            }
-            if (textElement.isContentEditable === true) {
-                textElement.value = newText;
-                textElement.setCaretPosition(caretPos);
-            } else {
-                document.execCommand("selectAll", false, null);
-                document.execCommand("insertHTML", false, newText);
-            }
-        } else {
-            /// gets part of text before the next delimiter (including the delimiter)
-            var sequence = text.slice(0, caretPos).split(delim);
-            if (sequence.length < 3) {
-                /// there should be at least two delimiters
-                return;
-            }
-            sequence.pop(); /// remove the last element, which is the empty string after the last delimiter
-            word = sequence.pop(); /// get the last word
-            if (word === "" || word === undefined) {
-                return;
-            }
-            var replacement = await checkDictionary(word);
-            if (replacement != "" && replacement != undefined) {
-                text =
-                    text.slice(0, caretPos - word.length - 2) +
-                    replacement +
-                    text.slice(caretPos);
-                if (textElement.isContentEditable === false) {
-                    textElement.value = text;
-                } else {
-                    document.execCommand("selectAll", false, null);
-                    document.execCommand("insertHTML", false, text);
-                }
-                setCaretPosition(
-                    textElement,
-                    caretPos - word.length + replacement.length - 2
-                );
-            }
+        var sequence = text.split(delim); /// get the sequence of words separated by the delimiter
+
+        if (sequence.length < 2){
+            return; /// there should be at least two delimiters for a hotword to be between them
         }
+
+        var word = text.slice(0, caretPos - 1).split(delim).pop(); /// get the word before the caret
+
+        var replacement = await checkDictionary(word);
+        if (replacement === "" || replacement === undefined || replacement === null) {
+            return;
+        }
+        var newText = text.slice(0, caretPos - word.length - 2) + replacement + text.slice(caretPos);
+
+        document.execCommand("selectAll", false, null);
+        document.execCommand("insertHTML", false, newText);
+        await new Promise(r => setTimeout(r, 5));
+        console.log(caretPos, replacement.length, word.length, caretPos - word.length - 2 + replacement.length);
+        setCaretPosition(caretPos - word.length - 2 + replacement.length);
     }
 }
 
 /// used for backspace, since we need the character which is being deleted
-async function keyPressed(event) {
+async function keyDown(event) {
+    var textElement = event.srcElement;
+    var text = textElement.innerText;
     if (event.key === "Backspace") {
-        var delim = await getDelimiter();
-        var textElement = event.srcElement;
-
-        var text = textElement.innerText;
-        if (text === undefined){
-            text = textElement.innerHTML;
-            /// the next 4 lines extract the text inside nested tags
-            text = text.split(">");
-            text = text[Math.floor(text.length / 2)];
-            text = text.split("<");
-            text = text[0];
-        }else{
-            textElement = document.evaluate("//*[text() = '" + text + "']", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
-        }
-        var caretPos = textElement.selectionStart;
-        if (caretPos === undefined) {
-            return; /// if caret position is not available, we can't really do anything
-        }
-
+        textElement = document.evaluate("//*[text() = '" + escape(text) + "']", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
         /// get position of caret
+        var selection = window.getSelection();
+        var caretPos = selection.anchorOffset;
+
+        /// certain characters (like emojis) are represented by multiple characters, so we need to find transform the text into an array of code points
+        /// then we will find the position of the character being deleted
         var codePointArray = Array.from(text);
         var codeCharPos = 0;
         var counter = 0;
@@ -115,6 +57,7 @@ async function keyPressed(event) {
             counter += c.length;
             codeCharPos++;
         }
+        
         var character = codePointArray[codeCharPos - 1];
         var replacement = await checkReverseDictionary(character);
         if (replacement != "" && replacement != undefined) {
@@ -122,49 +65,21 @@ async function keyPressed(event) {
                 codePointArray.slice(0, codeCharPos - 1).join("") +
                 delim +
                 replacement +
-                codePointArray.slice(codeCharPos + 1).join("");
-            if (
-                textElement.tagName === "TEXTAREA" ||
-                textElement.tagName === "INPUT" ||
-                textElement.isContentEditable === false
-            ) {
-                textElement.value = text;
-            } else {
-                document.execCommand("selectAll", false, null);
-                document.execCommand("insertHTML", false, text);
-            }
-            setCaretPosition(
-                textElement,
-                caretPos - (character.length - replacement.length - 1)
-            );
+                codePointArray.slice(codeCharPos).join("");
+            document.execCommand("selectAll", false, null);
+            document.execCommand("insertHTML", false, text);
+            setCaretPosition(caretPos - character.length + replacement.length + 1);
         }
     }
 }
 
-function setCaretPosition(elem, caretPos) {
-    if (elem != null) {
-        if (elem.createTextRange) {
-            console.log("createTextRange");
-            var range = elem.createTextRange();
-            range.move("character", caretPos);
-            range.select();
-        } else if (elem.setSelectionRange) {
-            console.log("setSelectionRange");
-            if (elem.selectionStart) {
-                elem.focus();
-                elem.setSelectionRange(caretPos, caretPos);
-            } else elem.focus();
-        }else if (elem.isContentEditable){
-            console.log("addRange");
-            var sel = window.getSelection();
-            var range = document.createRange();
-            range.setStart(sel.anchorNode, caretPos);
-            range.collapse(true);
-            sel.removeAllRanges();
-            sel.addRange(range);
-    
-        }
-    }
+function setCaretPosition(caretPos) {
+    var sel = window.getSelection();
+    var range = document.createRange();
+    range.setStart(sel.anchorNode, caretPos);
+    range.collapse(true);
+    sel.removeAllRanges();
+    sel.addRange(range);
 }
 
 async function checkDictionary(word) {
@@ -192,5 +107,11 @@ async function getDelimiter(){
 
 }
 
-document.addEventListener("keyup", keyReleased);
-document.addEventListener("keydown", keyPressed);
+chrome.runtime.onMessage.addListener(async function (request, sender, sendResponse) {
+    if (request.action === "reload") {
+        delim = request.delim;
+    }
+});
+
+document.addEventListener("keyup", keyUp);
+document.addEventListener("keydown", keyDown);
