@@ -3,24 +3,13 @@ async function keyReleased(event) {
     var delim = await getDelimiter();
     if (event.key === delim) {
         var textElement = event.srcElement;
-        var text;
-        
-        if (
-            textElement.tagName === "TEXTAREA" ||
-            textElement.tagName === "INPUT" ||
-            textElement.isContentEditable === false
-        ) {
-            text = textElement.value;
-        } else {
-            text = textElement.innerHTML;
-            /// the next 4 lines extract the text inside nested tags
-            text = text.split(">");
-            text = text[Math.floor(text.length / 2)];
-            text = text.split("<");
-            text = text[0];
-        }
+        var text = textElement.innerText;
+        textElement = document.evaluate("//*[text() = '" + text + "']", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
         /// get position of caret
-        var caretPos = textElement.selectionStart;
+        var selection = window.getSelection();
+        var caretPos = selection.anchorOffset;
+
+        // return;
         if (caretPos === undefined) {
             var sequence = text.split(delim); /// get the sequence of words separated by the delimiter
             /// try to get the whole thing then?
@@ -53,12 +42,9 @@ async function keyReleased(event) {
             if (newText === undefined) {
                 return;
             }
-            if (
-                textElement.tagName === "TEXTAREA" ||
-                textElement.tagName === "INPUT" ||
-                textElement.isContentEditable === false
-            ) {
+            if (textElement.isContentEditable === true) {
                 textElement.value = newText;
+                textElement.setCaretPosition(caretPos);
             } else {
                 document.execCommand("selectAll", false, null);
                 document.execCommand("insertHTML", false, newText);
@@ -81,11 +67,7 @@ async function keyReleased(event) {
                     text.slice(0, caretPos - word.length - 2) +
                     replacement +
                     text.slice(caretPos);
-                if (
-                    textElement.tagName === "TEXTAREA" ||
-                    textElement.tagName === "INPUT" ||
-                    textElement.isContentEditable === false
-                ) {
+                if (textElement.isContentEditable === false) {
                     textElement.value = text;
                 } else {
                     document.execCommand("selectAll", false, null);
@@ -93,7 +75,7 @@ async function keyReleased(event) {
                 }
                 setCaretPosition(
                     textElement,
-                    caretPos - word.length + replacement.length
+                    caretPos - word.length + replacement.length - 2
                 );
             }
         }
@@ -105,25 +87,22 @@ async function keyPressed(event) {
     if (event.key === "Backspace") {
         var delim = await getDelimiter();
         var textElement = event.srcElement;
+
+        var text = textElement.innerText;
+        if (text === undefined){
+            text = textElement.innerHTML;
+            /// the next 4 lines extract the text inside nested tags
+            text = text.split(">");
+            text = text[Math.floor(text.length / 2)];
+            text = text.split("<");
+            text = text[0];
+        }else{
+            textElement = document.evaluate("//*[text() = '" + text + "']", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+        }
         var caretPos = textElement.selectionStart;
         if (caretPos === undefined) {
             return; /// if caret position is not available, we can't really do anything
         }
-
-        var text;
-        if (
-            textElement.tagName === "TEXTAREA" ||
-            textElement.tagName === "INPUT" ||
-            textElement.isContentEditable === false
-        ) {
-            text = textElement.value;
-        } else {
-            text = textElement.innerHTML;
-        }
-        text = text.split(">");
-        text = text[Math.floor(text.length / 2)];
-        text = text.split("<");
-        text = text[0];
 
         /// get position of caret
         var codePointArray = Array.from(text);
@@ -165,14 +144,25 @@ async function keyPressed(event) {
 function setCaretPosition(elem, caretPos) {
     if (elem != null) {
         if (elem.createTextRange) {
+            console.log("createTextRange");
             var range = elem.createTextRange();
             range.move("character", caretPos);
             range.select();
-        } else {
+        } else if (elem.setSelectionRange) {
+            console.log("setSelectionRange");
             if (elem.selectionStart) {
                 elem.focus();
                 elem.setSelectionRange(caretPos, caretPos);
             } else elem.focus();
+        }else if (elem.isContentEditable){
+            console.log("addRange");
+            var sel = window.getSelection();
+            var range = document.createRange();
+            range.setStart(sel.anchorNode, caretPos);
+            range.collapse(true);
+            sel.removeAllRanges();
+            sel.addRange(range);
+    
         }
     }
 }
