@@ -3,66 +3,48 @@ getDelimiter().then((value) => {
     delim = value;
 });
 
+const timeout = 5;
+
 /// used for delim, and replacing the word with the emoji
 async function keyUp(event) {
     if (event.key === delim) {
-        var textElement = event.srcElement;
-        var text = textElement.innerText;
-        textElement = document.evaluate("//*[text() = '" + escape(text) + "']", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
         /// get position of caret
         var selection = window.getSelection();
+        var textElement = selection.anchorNode.parentElement;
+        var text = textElement.textContent;
         var caretPos = selection.anchorOffset;
 
-        var sequence = text.split(delim); /// get the sequence of words separated by the delimiter
-
-        if (sequence.length < 2){
-            return; /// there should be at least two delimiters for a hotword to be between them
-        }
-
-        console.log(text, sequence);
-
-        var newText = sequence[0];
-        var replaced = false;
-        for (var i = 1; i < sequence.length - 1; i++) {
-            /// start from 1, since the first element is before the first delimiter, and go to the second to last element, since the last element is after the last delimiter
-            var replacement = await checkDictionary(sequence[i]);
-            console.log(sequence[i]);
-            if (replacement != "" && replacement != undefined) {
-                console.log(replacement);
-                newText += replacement;
-                replaced = true;
-                // codeCharPos -= sequence[i].length + 2 - replacement.length;
-                caretPos -= sequence[i].length + 2 - replacement.length;
-            } else {
-                if (!replaced) {
-                    newText += delim;
-                }
-                newText += sequence[i];
-                replaced = false;
-            }
-        }
-        if(!replaced){
-            newText += delim;
-        }
-        newText += sequence[sequence.length - 1];
-        if (newText === undefined) {
+        var sequence = text.slice(0, caretPos - 1).split(delim);
+        
+        /// if the sequence is less than 2, then there is no word to replace
+        if (sequence.length < 2) {
             return;
         }
-        console.log(newText);
+        
+        var word = sequence.pop();
+        
+        var replacement = await checkDictionary(word);
+
+        /// if the word is not in the dictionary, then we don't need to replace it
+        if (replacement == "" || replacement == undefined) {
+            return;
+        }
+
+        var newText = sequence.join(delim) + replacement + text.slice(caretPos);
         document.execCommand("selectAll", false, null);
         document.execCommand("insertHTML", false, newText);
-        setCaretPosition(caretPos);
+        textElement.textContent = newText;
+        await new Promise(r => setTimeout(r, timeout)); /// certain sites have lag? so we need to wait for the text to be inserted before setting the caret position
+        setCaretPosition(caretPos - word.length + replacement.length - 3);
     }
 }
 
 /// used for backspace, since we need the character which is being deleted
 async function keyDown(event) {
-    var textElement = event.srcElement;
-    var text = textElement.innerText;
     if (event.key === "Backspace") {
-        textElement = document.evaluate("//*[text() = '" + escape(text) + "']", document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
-        /// get position of caret
         var selection = window.getSelection();
+        var textElement = selection.anchorNode.parentElement;
+        var text = textElement.textContent;
         var caretPos = selection.anchorOffset;
 
         /// certain characters (like emojis) are represented by multiple characters, so we need to find transform the text into an array of code points
@@ -70,16 +52,26 @@ async function keyDown(event) {
         var codePointArray = Array.from(text);
         var codeCharPos = 0;
         var counter = 0;
+        
+        if (caretPos == 0) {
+            return;
+        }
+
         for (var c of codePointArray) {
-            if (counter === caretPos) {
-                break;
-            }
             counter += c.length;
             codeCharPos++;
+            if (counter == caretPos) {
+                break;
+            }
+            if(counter > caretPos) {
+                caretPos = counter;
+                break;
+            }
         }
         
         var character = codePointArray[codeCharPos - 1];
         var replacement = await checkReverseDictionary(character);
+
         if (replacement != "" && replacement != undefined) {
             text =
                 codePointArray.slice(0, codeCharPos - 1).join("") +
@@ -88,7 +80,7 @@ async function keyDown(event) {
                 codePointArray.slice(codeCharPos).join("");
             document.execCommand("selectAll", false, null);
             document.execCommand("insertHTML", false, text);
-            // await new Promise(r => setTimeout(r, 10));
+            await new Promise(r => setTimeout(r, timeout)); /// certain sites have lag? so we need to wait for the text to be inserted before setting the caret position
             setCaretPosition(caretPos - character.length + replacement.length + 1);
         }
     }
@@ -135,4 +127,4 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
 });
 
 document.addEventListener("keyup", keyUp);
-document.addEventListener("keydown", keyDown);
+window.addEventListener("keydown", keyDown, true);
