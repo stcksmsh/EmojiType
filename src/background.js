@@ -39,6 +39,7 @@ var blacklistOn;
 var blacklistValue;
 
 var delim;
+var suggestionsOn;
 
 
 chrome.storage.local.get({whitelist: {state: false, value: []}, blacklist: {state: false, value: []}}, result => {
@@ -55,10 +56,13 @@ chrome.storage.local.get({dictionary: defaultDictionary}, function(result) {
     }
 });
 
-chrome.storage.local.get({delim: ":"}, function(result) {
+chrome.storage.local.get({delim: ";"}, function(result) {
     delim = result.delim;
 });
 
+chrome.storage.local.get({suggestions: true}, function(result) {
+    suggestionsOn = result.suggestions;
+});
 
 /// what requests should look like
 let request = {
@@ -70,8 +74,17 @@ let request = {
     "dictionary": {
         "hello": "world"
     },
+    "suggestions": "on/off",
     "delim": ":"
 };
+
+function notifyTabs(message){
+    chrome.tabs.query({}, function(tabs){
+        for (let tab of tabs) {
+            chrome.tabs.sendMessage(tab.id, message, function(response) {});  
+        }
+    });
+}
 
 chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
     if (request.action === "get") {
@@ -93,6 +106,8 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
             sendResponse(DICT);
         }else if(request.delim !== undefined){
             sendResponse(delim);
+        }else if(request.suggestions !== undefined){
+            sendResponse(suggestionsOn);
         }else{
             sendResponse("");
         }
@@ -102,6 +117,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
             REVDICT[request.value] = request.key;
             chrome.storage.local.set({dictionary: DICT});
             sendResponse("success");
+            notifyTabs({action: "set", key: request.key, value: request.value});
         }else if(request.whitelist !== undefined){
             whitelistValue = request.whitelist.value;
             whitelistOn = request.whitelist.state;
@@ -119,13 +135,17 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
             }
             chrome.storage.local.set({dictionary: DICT});
             sendResponse("success");
+            notifyTabs({action: "set", dictionary: DICT, revdictionary: REVDICT});
         }else if(request.delim !== undefined){
             delim = request.delim;
             chrome.storage.local.set({delim: delim});
             sendResponse("success");
-            chrome.tabs.query({active: true, currentWindow: true}, function(tabs){
-                chrome.tabs.sendMessage(tabs[0].id, {action: "reload", delim: delim}, function(response) {});  
-            });
+            notifyTabs({action: "set", delim: delim});
+        }else if(request.suggestions !== undefined){
+            suggestionsOn = request.suggestions;
+            chrome.storage.local.set({suggestions: suggestionsOn});
+            sendResponse("success");
+            notifyTabs({action: "set", suggestions: suggestionsOn});
         }else{
             sendResponse("");
         }
@@ -165,14 +185,13 @@ function IsUrlBlacklisted(url) {
 }
 
 function initiateContentScript(tab, changeInfo, tabId){
-    if(changeInfo.status != "complete"){
-        return;
-    }/// if the page is not fully loaded, don't do anything
-    if(IsUrlWhitelisted(tab.url) && !IsUrlBlacklisted(tab.url)){
-        chrome.scripting.executeScript({
-            target: { tabId: tabId },
-            files: ["content.js"]
-        });
+    if(changeInfo.status === 'complete'){
+        if(IsUrlWhitelisted(tab.url) && !IsUrlBlacklisted(tab.url)){
+            chrome.scripting.executeScript({
+                target: { tabId: tabId },
+                files: ["content.js", "suggestionBox.js"]
+            });
+        }
     }
 }
 
