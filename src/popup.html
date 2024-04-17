@@ -34,13 +34,22 @@
             <button id="update-blacklist-btn" class="update-button">Update</button>
         </div>
     </div>
-    <div class="lower-section">
+    <div class="middle-section">
         <div class="list-section">
             <h2>Extension Dictionary</h2>
             <div class="container dictionary-container" id="dictionary-container"></div>
             <br>
             <button id="update-dictionary-btn" class="update-button" style="margin-left:20px;">Update</button>
         </div>
+    </div>
+    <div class="lower-section">
+        <div class="list-section">
+                <h2>Suggestions</h2>
+                <div class="toggle-button" id="suggestions-toggle" style="align-self: center;">OFF</div>
+                <div>
+                    <input type="range" min="0" max="1" value="0.5" step="0.01" class="slider" id="opacity-slider" style="align-self: center;">
+                </div>
+            </div>
     </div>
     <script src="popup.js"></script>
 </body>

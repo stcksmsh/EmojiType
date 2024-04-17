@@ -80,7 +80,6 @@ async function keyDown(event){
         var character = codePointArray[codeCharPos - 1];
         var replacement = REVDICT[character];
 
-        console.log(character, replacement);
 
         if (replacement != "" && replacement != undefined) {
             event.preventDefault();
@@ -91,7 +90,6 @@ async function keyDown(event){
                 codePointArray.slice(codeCharPos).join("") + ' ';
             document.execCommand("selectAll", false, null);
             document.execCommand("insertHTML", false, text);
-            console.log(codePointArray, codeCharPos, codePointArray.slice(codeCharPos));
             await new Promise(r => setTimeout(r, timeout)); /// certain sites have lag? so we need to wait for the text to be inserted before setting the caret position
             setCaretPosition(caretPos - character.length + replacement.length + 1);
             word = replacement;
@@ -116,7 +114,6 @@ async function keyDown(event){
         event.preventDefault();
         await new Promise(r => setTimeout(r, timeout)); /// certain sites have lag? so we need to wait for the text to be inserted before setting the caret position
         setCaretPosition(caretPos - word.length + replacement.length - 2);
-        console.log(caretPos, word.length, replacement.length);
         word = null;
     }
     else if(event.key != "Tab"){
@@ -138,7 +135,6 @@ async function keyDown(event){
     if (event.key === "Tab") {
         if (replacement != null) {
             event.preventDefault();
-            console.log(sequence, replacement, text, caretPos, text.slice(caretPos));
             var newText = sequence.join(delim) + delim + replacement + text.slice(caretPos);
             document.execCommand("selectAll", false, null);
             document.execCommand("insertHTML", false, newText);
@@ -171,7 +167,7 @@ async function getDelimiter(){
 }
 
 chrome.runtime.onMessage.addListener(async function (request, sender, sendResponse) {
-    if (request.action === "set") {;smile;
+    if (request.action === "set") {
         if (request.key !== undefined && request.value !== undefined) {
             DICT[request.key] = request.value;
             REVDICT[request.value] = request.key;
@@ -186,7 +182,9 @@ chrome.runtime.onMessage.addListener(async function (request, sender, sendRespon
             delim = request.delim;
         }
         if (request.suggestions !== undefined) {
-            suggestionsOn = request.suggestions;
+            suggestionsOn = request.suggestions.state;
+            suggestionsOpacity = request.suggestions.opacity;
+            updateSuggestionBox();
         }
     }
 });

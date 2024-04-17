@@ -15,17 +15,22 @@ body {
 }
 
 .upper-section {
-    flex: 3;
+    flex: 2;
     display: flex;
     flex-direction: row;
     justify-content: space-evenly;
-    padding-bottom: 20px;
 }
 
+.middle-section {
+    flex: 3;
+    display: flex;
+    justify-content: space-evenly;
+}
 .lower-section {
     flex: 4;
     display: flex;
     justify-content: space-evenly;
+    align-content: center;
 }
 
 .list-section {
@@ -56,7 +61,7 @@ body {
 
 .whitelist-container, .blacklist-container {
     min-width: 150px;
-    min-height: 50px;
+    min-height: 25px;
     justify-content: start;
     align-items: start;
     max-height: 75px;
@@ -84,7 +89,7 @@ body {
 
 .dictionary-container {
     width: 400px;
-    max-height: 200px;
+    max-height: 150px;
     padding: 10px;
     overflow-y: auto
 }
@@ -145,6 +150,8 @@ body {
     align-items: center;
 }
 
+.slider-container {
+}
 
 .toggle-button {
     cursor: pointer;

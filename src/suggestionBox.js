@@ -18,15 +18,13 @@ floatingDiv.style=' position: absolute;\
 
 document.body.appendChild(floatingDiv);
 
-var suggestionsOn;
-
 DICT = {}
 REVDICT = {}
 
 let divX = 0, divY = 0;
 
 /// now get the dictionary from the background script, initially
-chrome.runtime.sendMessage({
+chrome.runtime.sendMessage({    
     action: "get",
     dictionary: true
 }).then(function (response) {
@@ -37,11 +35,17 @@ chrome.runtime.sendMessage({
     }
 });
 
+
+var suggestionsOn = false;
+var suggestionsOpacity = 0.75;
+
 chrome.runtime.sendMessage({
     action: "get",
     suggestions: true
 }).then(function (response) {
-    suggestionsOn = response;
+    suggestionsOn = response.state;
+    suggestionsOpacity = response.opacity;
+    updateSuggestionBox();
 });
 
 function clickedSuggestion(event) {
@@ -49,7 +53,6 @@ function clickedSuggestion(event) {
 };
 
 function updateSuggestions(x, top, bottom, text) {
-    console.log("update: " + text);
     if(!suggestionsOn) {
         floatingDiv.style.display = "none";
         return null;
@@ -79,7 +82,6 @@ function updateSuggestions(x, top, bottom, text) {
         return null;
     }
     
-    console.log(suggestions);
     
     suggestions.sort((a, b) => DICT[b] - DICT[a]);
     for(var i = 0; i < suggestions.length; i++) {
@@ -106,19 +108,24 @@ function updateSuggestions(x, top, bottom, text) {
     }
 
     
-    console.log(window.screen.availHeight, top, bottom, floatingDiv.clientHeight);
     if(window.screen.availHeight - bottom < floatingDiv.clientHeight + 150) {
-        console.log("top");
         top -= floatingDiv.clientHeight;
         floatingDiv.style.left = x + "px";
         floatingDiv.style.top = top + "px";
     }else{
-        console.log("bottom");
         floatingDiv.style.left = x + "px";
         floatingDiv.style.top = bottom + "px";
     }
         
     
-    console.log("update: " + text);
     return suggestions[0];
+}
+
+function updateSuggestionBox(){
+    floatingDiv.style.opacity = suggestionsOpacity;
+    if(suggestionsOn){
+        floatingDiv.style.display = "flex";
+    }else{
+        floatingDiv.style.display = "none";
+    }
 }

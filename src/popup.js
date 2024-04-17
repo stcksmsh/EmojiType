@@ -5,6 +5,8 @@ var whitelistState;
 var blacklistState;
 var delimiter;
 var dictionary = {};
+var suggestionsOn;
+var suggestionsOpacity;
 
 
 // Function to update whitelist container
@@ -108,6 +110,19 @@ function toggleBlacklist() {
     chrome.runtime.sendMessage({action: "set", blacklist: {state: blacklistState, value: blacklistValue}});
 }
 
+// Function to toggle suggestions
+function toggleSuggestions() {
+    var suggestionsToggle = document.getElementById('suggestions-toggle');
+    suggestionsToggle.classList.toggle('active');
+    if (suggestionsOn === 'off') {
+        suggestionsOn = 'on';
+    } else {
+        suggestionsOn = 'off';
+    }
+    suggestionsToggle.innerText = suggestionsOn.toUpperCase();
+    chrome.runtime.sendMessage({action: "set", suggestions: {state: suggestionsOn, opacity: suggestionsOpacity}});
+}
+
 // Function to update whitelist items
 function updateWhitelistItems() {
     // Get the whitelist container
@@ -151,6 +166,11 @@ function updateDelimiter() {
     delimiter = container.innerText;
     // Send message to background.js to update the delimiter
     chrome.runtime.sendMessage({action: "set", delim: delimiter});
+}
+
+function updateSuggestionsOpacity(event){
+    suggestionsOpacity = event.target.value;
+    chrome.runtime.sendMessage({action: "set", suggestions: {state: suggestionsOn, opacity: suggestionsOpacity}});
 }
 
 function deleteItem(event){
@@ -243,7 +263,15 @@ async function init(){
     initDelimiter();
     initDictionary();
 
-    let dictionaryContainer = document.getElementById('dictionary-container');
+    var suggestions = await chrome.runtime.sendMessage({action: "get", suggestions: true});
+    suggestionsOn = suggestions.state;
+    suggestionsOpacity = suggestions.opacity;
+    if(suggestionsOn === "on"){
+        document.getElementById('suggestions-toggle').classList.toggle('active');
+        document.getElementById('suggestions-toggle').innerText = "ON";
+    }
+    document.getElementById('opacity-slider').value = suggestionsOpacity;
+
     
     // Add event listeners after the fact
     document.getElementById('whitelist-toggle').addEventListener('click', toggleWhitelist);
@@ -256,6 +284,10 @@ async function init(){
     document.getElementById('update-dictionary-btn').addEventListener('click', updateDictionaryItems);
 
     document.getElementById('dictionary-container').addEventListener('keydown', addNewDictionaryItem);    
+
+    document.getElementById('suggestions-toggle').addEventListener('click', toggleSuggestions);
+    
+    document.getElementById('opacity-slider').addEventListener('input', updateSuggestionsOpacity);
 }
 
 document.addEventListener('DOMContentLoaded', init, false);

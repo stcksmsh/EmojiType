@@ -40,7 +40,7 @@ var blacklistValue;
 
 var delim;
 var suggestionsOn;
-
+var suggestionsOpacity = 0.5;
 
 chrome.storage.local.get({whitelist: {state: false, value: []}, blacklist: {state: false, value: []}}, result => {
     whitelistOn = result.whitelist.state;
@@ -60,8 +60,9 @@ chrome.storage.local.get({delim: ";"}, function(result) {
     delim = result.delim;
 });
 
-chrome.storage.local.get({suggestions: true}, function(result) {
-    suggestionsOn = result.suggestions;
+chrome.storage.local.get({suggestions: {state: true, opacity: 0.75}}, function(result) {
+    suggestionsOn = result.suggestions.state;
+    suggestionsOpacity = result.suggestions.opacity;
 });
 
 /// what requests should look like
@@ -74,7 +75,7 @@ let request = {
     "dictionary": {
         "hello": "world"
     },
-    "suggestions": "on/off",
+    "suggestions": {state: "on/off", opacity: 0.75},
     "delim": ":"
 };
 
@@ -107,7 +108,7 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
         }else if(request.delim !== undefined){
             sendResponse(delim);
         }else if(request.suggestions !== undefined){
-            sendResponse(suggestionsOn);
+            sendResponse({state: suggestionsOn, opacity: suggestionsOpacity});
         }else{
             sendResponse("");
         }
@@ -142,10 +143,11 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
             sendResponse("success");
             notifyTabs({action: "set", delim: delim});
         }else if(request.suggestions !== undefined){
-            suggestionsOn = request.suggestions;
-            chrome.storage.local.set({suggestions: suggestionsOn});
+            suggestionsOn = request.suggestions.state;
+            suggestionsOpacity = request.suggestions.opacity;
+            chrome.storage.local.set({suggestions: {state: suggestionsOn, opacity: suggestionsOpacity}});
             sendResponse("success");
-            notifyTabs({action: "set", suggestions: suggestionsOn});
+            notifyTabs({action: "set", suggestions: {state: suggestionsOn, opacity: suggestionsOpacity}});
         }else{
             sendResponse("");
         }
