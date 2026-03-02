@@ -52,9 +52,9 @@ chrome.runtime
     updateSuggestionBox();
   });
 
-function clickedSuggestion(event) {
-  /// TODO: insert the suggestion into the text
-}
+window.__emojitypeHideSuggestions = function () {
+  floatingDiv.style.display = "none";
+};
 
 function updateSuggestions(x, top, bottom, text) {
   if (!suggestionsOn) {
@@ -90,14 +90,20 @@ function updateSuggestions(x, top, bottom, text) {
     return null;
   }
 
-  suggestions.sort((a, b) => DICT[b] - DICT[a]);
+  suggestions.sort((a, b) => a.localeCompare(b));
   for (var i = 0; i < suggestions.length; i++) {
     var suggestion = suggestions[i];
     var suggestionDiv = document.createElement("div");
     suggestionDiv.style =
       "padding: 5px; cursor: pointer; display: flex; justify-content: space-between;";
-    suggestionDiv.onclick = function (event) {
-      clickedSuggestion(event);
+    suggestionDiv.dataset.keyword = suggestion;
+    suggestionDiv.onclick = function (e) {
+      var kw = e.currentTarget.dataset.keyword;
+      if (kw && DICT[kw] != null) {
+        document.dispatchEvent(
+          new CustomEvent("emojitype-insert-suggestion", { detail: { keyword: kw } })
+        );
+      }
     };
 
     if (i > 0) suggestionDiv.style.borderTop = "1px solid black";

@@ -133,10 +133,10 @@ async function keyDown(event) {
         sequence.join(delim) + delim + replacement + text.slice(caretPos);
       document.execCommand("selectAll", false, null);
       document.execCommand("insertHTML", false, newText);
-      textElement.textContent =
-        text.slice(0, caretPos) + replacement + text.slice(caretPos);
-      await new Promise((r) => setTimeout(r, timeout)); /// certain sites have lag? so we need to wait for the text to be inserted before setting the caret position
-      setCaretPosition(caretPos - word.length + replacement.length);
+      await new Promise((r) => setTimeout(r, timeout));
+      var newCaretPos =
+        sequence.join(delim).length + delim.length + replacement.length;
+      setCaretPosition(newCaretPos);
       updateSuggestions(x, top, bottom, null);
     }
   }
@@ -184,5 +184,28 @@ chrome.runtime.onMessage.addListener(
   }
 );
 
-// document.addEventListener("keyup", keyUp);
+document.addEventListener("emojitype-insert-suggestion", function (e) {
+  var keyword = e.detail && e.detail.keyword;
+  if (!keyword || DICT[keyword] == null) return;
+  var selection = window.getSelection();
+  if (!selection.rangeCount) return;
+  var textElement = selection.anchorNode && selection.anchorNode.parentElement;
+  if (!textElement) return;
+  var text = textElement.textContent;
+  var caretPos = selection.anchorOffset;
+  var sequence = text.slice(0, caretPos).split(delim);
+  var word = sequence.pop();
+  var replacement = DICT[keyword];
+  var newText =
+    sequence.join(delim) + delim + replacement + text.slice(caretPos);
+  document.execCommand("selectAll", false, null);
+  document.execCommand("insertHTML", false, newText);
+  setTimeout(function () {
+    var newCaretPos =
+      sequence.join(delim).length + delim.length + replacement.length;
+    setCaretPosition(newCaretPos);
+    if (window.__emojitypeHideSuggestions) window.__emojitypeHideSuggestions();
+  }, 2);
+});
+
 window.addEventListener("keydown", keyDown, true);
