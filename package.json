@@ -1,6 +1,6 @@
 {
   "name": "emojitype",
-  "version": "2.6.0",
+  "version": "2.7.0",
   "description": "Type emojis in any text field by replacing :keyword: with emojis.",
   "private": true,
   "type": "module",
@@ -9,11 +9,14 @@
     "lint": "eslint src --ext .js",
     "lint:fix": "eslint src --ext .js --fix",
     "format": "prettier --write \"src/**/*.{js,json,html,css}\"",
-    "format:check": "prettier --check \"src/**/*.{js,json,html,css}\""
+    "format:check": "prettier --check \"src/**/*.{js,json,html,css}\"",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "devDependencies": {
     "eslint": "^9.0.0",
     "globals": "^15.0.0",
-    "prettier": "^3.0.0"
+    "prettier": "^3.0.0",
+    "vitest": "^2.0.0"
   }
 }
