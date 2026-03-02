@@ -2,210 +2,181 @@ var delim = ":";
 getDelimiter().then((value) => {
   delim = value;
 });
-const timeout = 2;
 
-// /// used for delim, and replacing the word with the emoji
-// async function keyUp(event) {
-//     /// get the text, caret position, and the word to replace
-//     var selection = window.getSelection();
-//     var textElement = selection.anchorNode.parentElement;
-//     var text = textElement.textContent;
-//     var caretPos = selection.anchorOffset;
+function getEditableContext() {
+  var el = document.activeElement;
+  if (!el) return null;
+  if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {
+    return {
+      element: el,
+      text: el.value,
+      caretPos: el.selectionStart,
+      isInput: true,
+    };
+  }
+  var sel = window.getSelection();
+  if (!sel || sel.rangeCount === 0 || !sel.anchorNode) return null;
+  var container =
+    sel.anchorNode.nodeType === 3 ? sel.anchorNode.parentElement : sel.anchorNode;
+  var ce = container && container.closest("[contenteditable]");
+  if (!ce) return null;
+  var range = sel.getRangeAt(0).cloneRange();
+  range.selectNodeContents(ce);
+  range.setEnd(sel.getRangeAt(0).startContainer, sel.getRangeAt(0).startOffset);
+  var caretPos = range.toString().length;
+  return {
+    element: ce,
+    text: ce.textContent || "",
+    caretPos: caretPos,
+    isInput: false,
+  };
+}
 
-//     var x = selection.anchorNode.parentElement.getBoundingClientRect().left + caretPos * 10;
-//     var y = selection.anchorNode.parentElement.getBoundingClientRect().top + 20;
-//     if (event.key === delim) {
+function applyReplacement(ctx, newText, newCaretPos) {
+  if (ctx.isInput) {
+    ctx.element.value = newText;
+    ctx.element.setSelectionRange(newCaretPos, newCaretPos);
+    return;
+  }
+  var range = document.createRange();
+  range.selectNodeContents(ctx.element);
+  range.deleteContents();
+  var textNode = document.createTextNode(newText);
+  range.insertNode(textNode);
+  range.setStart(textNode, Math.min(newCaretPos, textNode.length));
+  range.collapse(true);
+  var sel = window.getSelection();
+  sel.removeAllRanges();
+  sel.addRange(range);
+}
 
-//         var sequence = text.slice(0, caretPos - 1).split(delim);
-//         /// if the sequence is less than 2, then there is no word to replace
-//         if (sequence.length < 2) return;
+function getSuggestionBoxCoords(ctx) {
+  if (ctx.isInput) {
+    var rect = ctx.element.getBoundingClientRect();
+    return { x: rect.left, top: rect.top, bottom: rect.bottom };
+  }
+  var sel = window.getSelection();
+  if (!sel.rangeCount) return null;
+  var box = sel.getRangeAt(0).getClientRects()[0];
+  return box
+    ? { x: box.right, top: box.top, bottom: box.bottom }
+    : null;
+}
 
-//         var word = sequence.pop();
-
-//         var replacement = DICT[word];
-
-//         /// if the word is not in the dictionary, then we don't need to replace it
-//         if (replacement == "" || replacement == undefined) {
-//             return;
-//         }
-
-//         var newText = sequence.join(delim) + replacement + text.slice(caretPos);
-//         document.execCommand("selectAll", false, null);
-//         document.execCommand("insertHTML", false, newText);
-//         textElement.textContent = newText;
-
-//         await new Promise(r => setTimeout(r, timeout)); /// certain sites have lag? so we need to wait for the text to be inserted before setting the caret position
-//         setCaretPosition(caretPos - word.length + replacement.length - 3);
-//     }
-//     updateSuggestions(x, y, text.slice(0, caretPos).split(delim).pop());
-// }
-
-/// used for backspace, since we need the character which is being deleted
 async function keyDown(event) {
-  var selection = window.getSelection();
-  var textElement = selection.anchorNode.parentElement;
-  var text = textElement.textContent;
-  var caretPos = selection.anchorOffset;
-
+  var ctx = getEditableContext();
+  if (!ctx) return;
+  var text = ctx.text;
+  var caretPos = ctx.caretPos;
   var sequence = text.slice(0, caretPos).split(delim);
   var word = sequence.pop();
 
   if (event.key === "Backspace") {
     word = word.slice(0, -1);
-    /// certain characters (like emojis) are represented by multiple characters, so we need to find transform the text into an array of code points
-    /// then we will find the position of the character being deleted
     var codePointArray = Array.from(text);
     var codeCharPos = 0;
     var counter = 0;
-
-    if (caretPos == 0) {
-      return;
-    }
-
+    if (caretPos === 0) return;
     for (var c of codePointArray) {
       counter += c.length;
       codeCharPos++;
-      if (counter == caretPos) {
-        break;
-      }
+      if (counter === caretPos) break;
       if (counter > caretPos) {
         caretPos = counter;
         break;
       }
     }
-
     var character = codePointArray[codeCharPos - 1];
     var replacement = REVDICT[character];
-
-    if (replacement != "" && replacement != undefined) {
+    if (replacement != null && replacement !== "") {
       event.preventDefault();
-      text =
+      var newText =
         codePointArray.slice(0, codeCharPos - 1).join("") +
         delim +
         replacement +
         codePointArray.slice(codeCharPos).join("") +
         " ";
-      document.execCommand("selectAll", false, null);
-      document.execCommand("insertHTML", false, text);
-      await new Promise((r) => setTimeout(r, timeout)); /// certain sites have lag? so we need to wait for the text to be inserted before setting the caret position
-      setCaretPosition(caretPos - character.length + replacement.length + 1);
+      var newCaretPos =
+        caretPos - character.length + replacement.length + delim.length + 1;
+      applyReplacement(ctx, newText, newCaretPos);
       word = replacement;
       sequence.push("");
     }
   } else if (event.key === delim) {
-    if (sequence.length == 0) return;
-
+    if (sequence.length === 0) return;
     var replacement = DICT[word];
-
-    /// if the word is not in the dictionary, then we don't need to replace it
-    if (replacement == "" || replacement == undefined) {
-      return;
-    }
-
-    var newText = sequence.join(delim) + replacement + text.slice(caretPos);
-    document.execCommand("selectAll", false, null);
-    document.execCommand("insertHTML", false, newText);
-    textElement.textContent = newText;
+    if (replacement == null || replacement === "") return;
     event.preventDefault();
-    await new Promise((r) => setTimeout(r, timeout)); /// certain sites have lag? so we need to wait for the text to be inserted before setting the caret position
-    setCaretPosition(caretPos - word.length + replacement.length - 2);
+    var newText = sequence.join(delim) + replacement + text.slice(caretPos);
+    var newCaretPos = caretPos - word.length + replacement.length - 1;
+    applyReplacement(ctx, newText, newCaretPos);
     word = null;
-  } else if (event.key != "Tab") {
+  } else if (event.key !== "Tab") {
     word += event.key;
   }
-  /// if the sequence length is 0, then there is no delimiter before the caret
-  if (sequence.length == 0) {
-    word = null;
-  }
+  if (sequence.length === 0) word = null;
 
-  let box = selection.getRangeAt(0).getClientRects()[0];
-
-  var x = box.right;
-  var top = box.top;
-  var bottom = box.bottom;
-
-  var replacement = updateSuggestions(x, top, bottom, word);
+  var coords = getSuggestionBoxCoords(ctx);
+  if (!coords) return;
+  var replacementSug = updateSuggestions(coords.x, coords.top, coords.bottom, word);
 
   if (event.key === "Tab") {
-    if (replacement != null) {
+    if (replacementSug != null) {
       event.preventDefault();
-      var newText =
-        sequence.join(delim) + delim + replacement + text.slice(caretPos);
-      document.execCommand("selectAll", false, null);
-      document.execCommand("insertHTML", false, newText);
-      await new Promise((r) => setTimeout(r, timeout));
-      var newCaretPos =
-        sequence.join(delim).length + delim.length + replacement.length;
-      setCaretPosition(newCaretPos);
-      updateSuggestions(x, top, bottom, null);
+      var newTextTab =
+        sequence.join(delim) + delim + replacementSug + text.slice(caretPos);
+      var newCaretPosTab =
+        sequence.join(delim).length + delim.length + replacementSug.length;
+      applyReplacement(ctx, newTextTab, newCaretPosTab);
+      updateSuggestions(coords.x, coords.top, coords.bottom, null);
     }
   }
-}
-
-function setCaretPosition(caretPos) {
-  var sel = window.getSelection();
-  var range = document.createRange();
-  range.setStart(sel.anchorNode, caretPos);
-  range.collapse(true);
-  sel.removeAllRanges();
-  sel.addRange(range);
 }
 
 async function getDelimiter() {
-  var delim = await chrome.runtime.sendMessage({
+  var d = await chrome.runtime.sendMessage({
     action: "get",
     delim: true,
   });
-  return delim;
+  return d;
 }
 
-chrome.runtime.onMessage.addListener(
-  async function (request, sender, sendResponse) {
-    if (request.action === "set") {
-      if (request.key !== undefined && request.value !== undefined) {
-        DICT[request.key] = request.value;
-        REVDICT[request.value] = request.key;
-      }
-      if (request.dictionary !== undefined) {
-        DICT = request.dictionary;
-        for (let key of Object.keys(DICT)) {
-          REVDICT[DICT[key]] = key;
-        }
-      }
-      if (request.delim !== undefined) {
-        delim = request.delim;
-      }
-      if (request.suggestions !== undefined) {
-        suggestionsOn = request.suggestions.state;
-        suggestionsOpacity = request.suggestions.opacity;
-        updateSuggestionBox();
-      }
+chrome.runtime.onMessage.addListener(function (request, _sender, _sendResponse) {
+  if (request.action === "set") {
+    if (request.key !== undefined && request.value !== undefined) {
+      DICT[request.key] = request.value;
+      REVDICT[request.value] = request.key;
+    }
+    if (request.dictionary !== undefined) {
+      DICT = request.dictionary;
+      REVDICT = {};
+      for (var key in DICT) REVDICT[DICT[key]] = key;
+    }
+    if (request.delim !== undefined) delim = request.delim;
+    if (request.suggestions !== undefined) {
+      suggestionsOn = request.suggestions.state;
+      suggestionsOpacity = request.suggestions.opacity;
+      updateSuggestionBox();
     }
   }
-);
+});
 
 document.addEventListener("emojitype-insert-suggestion", function (e) {
   var keyword = e.detail && e.detail.keyword;
   if (!keyword || DICT[keyword] == null) return;
-  var selection = window.getSelection();
-  if (!selection.rangeCount) return;
-  var textElement = selection.anchorNode && selection.anchorNode.parentElement;
-  if (!textElement) return;
-  var text = textElement.textContent;
-  var caretPos = selection.anchorOffset;
+  var ctx = getEditableContext();
+  if (!ctx) return;
+  var text = ctx.text;
+  var caretPos = ctx.caretPos;
   var sequence = text.slice(0, caretPos).split(delim);
-  var word = sequence.pop();
+  sequence.pop();
   var replacement = DICT[keyword];
   var newText =
     sequence.join(delim) + delim + replacement + text.slice(caretPos);
-  document.execCommand("selectAll", false, null);
-  document.execCommand("insertHTML", false, newText);
-  setTimeout(function () {
-    var newCaretPos =
-      sequence.join(delim).length + delim.length + replacement.length;
-    setCaretPosition(newCaretPos);
-    if (window.__emojitypeHideSuggestions) window.__emojitypeHideSuggestions();
-  }, 2);
+  var newCaretPos =
+    sequence.join(delim).length + delim.length + replacement.length;
+  applyReplacement(ctx, newText, newCaretPos);
+  if (window.__emojitypeHideSuggestions) window.__emojitypeHideSuggestions();
 });
 
 window.addEventListener("keydown", keyDown, true);
