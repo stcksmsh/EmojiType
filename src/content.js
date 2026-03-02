@@ -64,6 +64,16 @@ function getSuggestionBoxCoords(ctx) {
 }
 
 async function keyDown(event) {
+  if (
+    window.__emojitypeSuggestionsVisible &&
+    (event.key === "ArrowDown" || event.key === "ArrowUp" || event.key === "Enter")
+  ) {
+    event.preventDefault();
+    if (window.__emojitypeSuggestionsKey) {
+      window.__emojitypeSuggestionsKey(event.key);
+    }
+    return;
+  }
   var ctx = getEditableContext();
   if (!ctx) return;
   var text = ctx.text;

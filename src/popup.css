@@ -31,6 +31,20 @@ body {
   display: flex;
   justify-content: space-evenly;
   align-content: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.backup-section {
+  flex: 1;
+  min-width: 180px;
+}
+
+.backup-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
 .list-section {
