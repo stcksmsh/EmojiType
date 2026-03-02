@@ -1,100 +1,58 @@
-let defaultDictionary = {
-  angry: "😠",
-  blushing: "😊",
-  clap: "👏",
-  confounded: "😖",
-  confused: "😕",
-  crying: "😢",
-  disappointed: "😞",
-  dizzy: "😵",
-  drooling: "🤤",
-  fist: "✊",
-  flushed: "😳",
-  hug: "🤗",
-  kiss: "😘",
-  money: "🤑",
-  muscle: "💪",
-  neutral: "😐",
-  party: "🥳",
-  plead: "🥺",
-  rage: "😡",
-  eye_roll: "🙄",
-  quiet: "🤫",
-  zzz: "😴",
-  snoring: "😪",
-  smile: "😄",
-  sob: "😭",
-  sweat: "😓",
-  vomit: "🤮",
-};
-
 var DICT;
 var REVDICT = {};
-
 var whitelistOn;
 var whitelistValue;
 var blacklistOn;
 var blacklistValue;
-
 var delim;
 var suggestionsOn;
 var suggestionsOpacity = 0.5;
 
-chrome.storage.local.get(
-  {
-    whitelist: { state: false, value: [] },
-    blacklist: { state: false, value: [] },
-  },
-  (result) => {
-    whitelistOn = result.whitelist.state;
-    whitelistValue = result.whitelist.value;
-    blacklistOn = result.blacklist.state;
-    blacklistValue = result.blacklist.value;
-  }
-);
+var defaultDictFallback = { smile: "😄", angry: "😠" };
 
-chrome.storage.local.get({ dictionary: defaultDictionary }, function (result) {
-  DICT = result.dictionary;
-  for (let key of Object.keys(DICT)) {
-    REVDICT[DICT[key]] = key;
-  }
-});
+(async function init() {
+  var defaultDict = defaultDictFallback;
+  try {
+    var r = await fetch(
+      chrome.runtime.getURL("data/default-dictionary.json")
+    );
+    defaultDict = await r.json();
+  } catch (_) {}
 
-chrome.storage.local.get({ delim: ":" }, function (result) {
-  delim = result.delim;
-});
-
-chrome.storage.local.get(
-  { suggestions: { state: true, opacity: 0.75 } },
-  function (result) {
-    suggestionsOn = result.suggestions.state;
-    suggestionsOpacity = result.suggestions.opacity;
-  }
-);
-
-/// what requests should look like
-let request = {
-  action: "get/set",
-  key: "hello",
-  value: "world",
-  whitelist: { state: "on/off", value: ["https://*.example.com/*"] },
-  blacklist: { state: "on/off", value: ["https://example.com/*"] },
-  dictionary: {
-    hello: "world",
-  },
-  suggestions: { state: "on/off", opacity: 0.75 },
-  delim: ":",
-};
+  chrome.storage.local.get(
+    {
+      dictionary: defaultDict,
+      whitelist: { state: false, value: [] },
+      blacklist: { state: false, value: [] },
+      delim: ":",
+      suggestions: { state: true, opacity: 0.75 },
+    },
+    function (result) {
+      DICT = result.dictionary;
+      REVDICT = {};
+      for (var key in DICT) REVDICT[DICT[key]] = key;
+      whitelistOn = result.whitelist.state;
+      whitelistValue = result.whitelist.value;
+      blacklistOn = result.blacklist.state;
+      blacklistValue = result.blacklist.value;
+      delim = result.delim;
+      suggestionsOn = result.suggestions.state;
+      suggestionsOpacity = result.suggestions.opacity;
+      setupMessageListener();
+    }
+  );
+})();
 
 function notifyTabs(message) {
   chrome.tabs.query({}, function (tabs) {
-    for (let tab of tabs) {
-      chrome.tabs.sendMessage(tab.id, message, function (response) {});
+    for (var i = 0; i < tabs.length; i++) {
+      chrome.tabs.sendMessage(tabs[i].id, message).catch(function () {});
     }
   });
 }
 
-chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
+function setupMessageListener() {
+  chrome.runtime.onMessage.addListener(function (request, _sender, sendResponse) {
   if (request.action === "get") {
     if (request.key !== undefined) {
       let response = DICT[request.key];
@@ -174,7 +132,8 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
   } else {
     sendResponse("");
   }
-});
+  });
+}
 
 function IsUrlWhitelisted(url) {
   if (url == undefined) {

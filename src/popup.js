@@ -210,6 +210,111 @@ function updateDictionaryItems() {
   chrome.runtime.sendMessage({ action: "set", dictionary: items });
 }
 
+function exportSettings() {
+  (async function () {
+    var whitelist = await chrome.runtime.sendMessage({
+      action: "get",
+      whitelist: true,
+    });
+    var blacklist = await chrome.runtime.sendMessage({
+      action: "get",
+      blacklist: true,
+    });
+    var delim = await chrome.runtime.sendMessage({ action: "get", delim: true });
+    var dictionary = await chrome.runtime.sendMessage({
+      action: "get",
+      dictionary: true,
+    });
+    var suggestions = await chrome.runtime.sendMessage({
+      action: "get",
+      suggestions: true,
+    });
+    var data = {
+      whitelist: whitelist,
+      blacklist: blacklist,
+      delim: delim,
+      dictionary: dictionary,
+      suggestions: suggestions,
+    };
+    var blob = new Blob([JSON.stringify(data, null, 2)], {
+      type: "application/json",
+    });
+    var a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = "emojitype-settings.json";
+    a.click();
+    URL.revokeObjectURL(a.href);
+  })();
+}
+
+function importSettings() {
+  document.getElementById("import-file-input").click();
+}
+
+function onImportFileChange(event) {
+  var file = event.target.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function (e) {
+    try {
+      var data = JSON.parse(e.target.result);
+      if (!data || typeof data.dictionary !== "object") {
+        alert("Invalid settings file: missing dictionary");
+        return;
+      }
+      (async function () {
+        if (data.whitelist != null) {
+          await chrome.runtime.sendMessage({
+            action: "set",
+            whitelist: {
+              state: data.whitelist.state === true || data.whitelist.state === "on",
+              value: Array.isArray(data.whitelist.value) ? data.whitelist.value : [],
+            },
+          });
+        }
+        if (data.blacklist != null) {
+          await chrome.runtime.sendMessage({
+            action: "set",
+            blacklist: {
+              state: data.blacklist.state === true || data.blacklist.state === "on",
+              value: Array.isArray(data.blacklist.value) ? data.blacklist.value : [],
+            },
+          });
+        }
+        if (data.delim != null) {
+          await chrome.runtime.sendMessage({
+            action: "set",
+            delim: String(data.delim),
+          });
+        }
+        if (data.dictionary != null) {
+          await chrome.runtime.sendMessage({
+            action: "set",
+            dictionary: data.dictionary,
+          });
+        }
+        if (data.suggestions != null) {
+          await chrome.runtime.sendMessage({
+            action: "set",
+            suggestions: {
+              state: data.suggestions.state === true || data.suggestions.state === "on",
+              opacity:
+                typeof data.suggestions.opacity === "number"
+                  ? data.suggestions.opacity
+                  : 0.75,
+            },
+          });
+        }
+        init();
+      })();
+    } catch (err) {
+      alert("Invalid JSON: " + (err.message || "parse error"));
+    }
+    event.target.value = "";
+  };
+  reader.readAsText(file);
+}
+
 function addNewDictionaryItem(event) {
   if (event.key === "Enter") {
     event.preventDefault(); // prevent the default action, make sure the newline character is not added
@@ -330,6 +435,16 @@ async function init() {
   document
     .getElementById("opacity-slider")
     .addEventListener("input", updateSuggestionsOpacity);
+
+  document
+    .getElementById("export-settings-btn")
+    .addEventListener("click", exportSettings);
+  document
+    .getElementById("import-settings-btn")
+    .addEventListener("click", importSettings);
+  document
+    .getElementById("import-file-input")
+    .addEventListener("change", onImportFileChange);
 }
 
 document.addEventListener("DOMContentLoaded", init, false);
