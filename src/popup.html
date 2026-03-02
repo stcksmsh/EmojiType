@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -9,17 +9,89 @@
   <body>
     <header class="header">
       <h1 class="header-title">EmojiType</h1>
-      <p class="header-subtitle" id="shortcut-hint">Type :keyword: or :keyword + Tab</p>
+      <div class="help-wrap">
+        <button
+          type="button"
+          class="help-toggle"
+          id="help-toggle"
+          aria-expanded="false"
+          aria-controls="help-content"
+        >
+          How it works
+        </button>
+        <div class="help-content" id="help-content" hidden>
+          <ul>
+            <li>
+              Pick a delimiter in <strong>Options</strong> (default
+              <code>:</code>).
+            </li>
+            <li>
+              In any text field, use
+              <code>delimiter + keyword + delimiter</code> (e.g.
+              <code>:smile:</code>) to replace with the emoji.
+            </li>
+            <li>
+              Or use <code>delimiter + keyword</code> and press
+              <strong>Tab</strong> to autocomplete.
+            </li>
+            <li>
+              Turn on <strong>Suggestions</strong> in Options to see matches as
+              you type.
+            </li>
+          </ul>
+        </div>
+      </div>
+      <p class="shortcut-tip">
+        <button type="button" class="link-button" id="open-shortcuts-btn">
+          Set keyboard shortcut
+        </button>
+        to open this popup quickly.
+      </p>
     </header>
 
     <nav class="tabs" role="tablist" aria-label="Settings sections">
-      <button type="button" class="tab" role="tab" id="tab-sites" aria-selected="true" aria-controls="panel-sites" data-tab="sites">Sites</button>
-      <button type="button" class="tab" role="tab" id="tab-options" aria-selected="false" aria-controls="panel-options" data-tab="options">Options</button>
-      <button type="button" class="tab" role="tab" id="tab-dictionary" aria-selected="false" aria-controls="panel-dictionary" data-tab="dictionary">Dictionary</button>
+      <button
+        type="button"
+        class="tab"
+        role="tab"
+        id="tab-sites"
+        aria-selected="true"
+        aria-controls="panel-sites"
+        data-tab="sites"
+      >
+        Sites
+      </button>
+      <button
+        type="button"
+        class="tab"
+        role="tab"
+        id="tab-options"
+        aria-selected="false"
+        aria-controls="panel-options"
+        data-tab="options"
+      >
+        Options
+      </button>
+      <button
+        type="button"
+        class="tab"
+        role="tab"
+        id="tab-dictionary"
+        aria-selected="false"
+        aria-controls="panel-dictionary"
+        data-tab="dictionary"
+      >
+        Dictionary
+      </button>
     </nav>
 
     <main class="main">
-      <section id="panel-sites" class="tab-panel active" role="tabpanel" aria-labelledby="tab-sites">
+      <section
+        id="panel-sites"
+        class="tab-panel active"
+        role="tabpanel"
+        aria-labelledby="tab-sites"
+      >
         <div class="status-block" id="current-site-status">
           <span class="status-label">This site:</span>
           <span class="status-value" id="status-value">—</span>
@@ -29,91 +101,290 @@
         <div class="field">
           <div class="field-row">
             <span class="label">Whitelist</span>
-            <button type="button" class="toggle" id="whitelist-toggle" role="switch" aria-checked="false">OFF</button>
+            <button
+              type="button"
+              class="toggle"
+              id="whitelist-toggle"
+              role="switch"
+              aria-checked="false"
+            >
+              OFF
+            </button>
           </div>
           <div class="pattern-list" id="whitelist-list"></div>
           <div class="field-row field-row--list-actions">
-            <button type="button" id="whitelist-add-btn" class="btn btn-secondary">+ Add</button>
+            <button
+              type="button"
+              id="whitelist-add-btn"
+              class="btn btn-secondary"
+            >
+              + Add
+            </button>
           </div>
-          <div class="field-error" id="whitelist-error" aria-live="polite"></div>
+          <div
+            class="field-error"
+            id="whitelist-error"
+            aria-live="polite"
+          ></div>
         </div>
 
         <div class="field">
           <div class="field-row">
             <span class="label">Blacklist</span>
-            <button type="button" class="toggle" id="blacklist-toggle" role="switch" aria-checked="false">OFF</button>
+            <button
+              type="button"
+              class="toggle"
+              id="blacklist-toggle"
+              role="switch"
+              aria-checked="false"
+            >
+              OFF
+            </button>
           </div>
           <div class="pattern-list" id="blacklist-list"></div>
           <div class="field-row field-row--list-actions">
-            <button type="button" id="blacklist-add-btn" class="btn btn-secondary">+ Add</button>
+            <button
+              type="button"
+              id="blacklist-add-btn"
+              class="btn btn-secondary"
+            >
+              + Add
+            </button>
           </div>
-          <div class="field-error" id="blacklist-error" aria-live="polite"></div>
+          <div
+            class="field-error"
+            id="blacklist-error"
+            aria-live="polite"
+          ></div>
         </div>
       </section>
 
-      <section id="panel-options" class="tab-panel" role="tabpanel" aria-labelledby="tab-options" hidden>
+      <section
+        id="panel-options"
+        class="tab-panel"
+        role="tabpanel"
+        aria-labelledby="tab-options"
+        hidden
+      >
         <div class="field">
           <label class="label" for="delimiter-input">Delimiter</label>
           <div class="delimiter-row">
-            <button type="button" class="chip chip--delim" data-delim=":" aria-pressed="false">:</button>
-            <button type="button" class="chip chip--delim" data-delim=";" aria-pressed="false">;</button>
-            <input type="text" id="delimiter-input" class="input input--short" maxlength="2" placeholder="Custom" aria-label="Custom delimiter" />
-            <button type="button" id="update-delimiter-btn" class="btn btn-primary">Update</button>
+            <button
+              type="button"
+              class="chip chip--delim"
+              data-delim=":"
+              aria-pressed="false"
+            >
+              :
+            </button>
+            <button
+              type="button"
+              class="chip chip--delim"
+              data-delim=";"
+              aria-pressed="false"
+            >
+              ;
+            </button>
+            <input
+              type="text"
+              id="delimiter-input"
+              class="input input--short"
+              maxlength="2"
+              placeholder="Custom"
+              aria-label="Custom delimiter"
+            />
+            <button
+              type="button"
+              id="update-delimiter-btn"
+              class="btn btn-primary"
+            >
+              Update
+            </button>
           </div>
-          <p class="delimiter-preview" id="delimiter-preview" aria-live="polite">Preview: —</p>
+          <p
+            class="delimiter-preview"
+            id="delimiter-preview"
+            aria-live="polite"
+          >
+            Preview: —
+          </p>
+          <p
+            class="delimiter-warning field-error"
+            id="delimiter-warning"
+            aria-live="polite"
+          ></p>
         </div>
 
         <div class="field">
           <div class="field-row">
             <span class="label">Suggestions</span>
-            <button type="button" class="toggle" id="suggestions-toggle" role="switch" aria-checked="false">OFF</button>
+            <button
+              type="button"
+              class="toggle"
+              id="suggestions-toggle"
+              role="switch"
+              aria-checked="false"
+            >
+              OFF
+            </button>
           </div>
           <div class="slider-row">
-            <label class="label label--inline" for="opacity-slider">Opacity</label>
-            <input type="range" id="opacity-slider" class="slider" min="0" max="1" value="0.75" step="0.05" aria-label="Suggestion box opacity" />
+            <label class="label label--inline" for="opacity-slider"
+              >Opacity</label
+            >
+            <input
+              type="range"
+              id="opacity-slider"
+              class="slider"
+              min="0"
+              max="1"
+              value="0.75"
+              step="0.05"
+              aria-label="Suggestion box opacity"
+            />
           </div>
         </div>
 
         <div class="field">
           <span class="label">Theme</span>
           <div class="delimiter-row">
-            <button type="button" class="chip theme-chip" data-theme="light" aria-pressed="true">Light</button>
-            <button type="button" class="chip theme-chip" data-theme="dark" aria-pressed="false">Dark</button>
+            <button
+              type="button"
+              class="chip theme-chip"
+              data-theme="light"
+              aria-pressed="true"
+            >
+              Light
+            </button>
+            <button
+              type="button"
+              class="chip theme-chip"
+              data-theme="dark"
+              aria-pressed="false"
+            >
+              Dark
+            </button>
           </div>
         </div>
       </section>
 
-      <section id="panel-dictionary" class="tab-panel" role="tabpanel" aria-labelledby="tab-dictionary" hidden>
+      <section
+        id="panel-dictionary"
+        class="tab-panel"
+        role="tabpanel"
+        aria-labelledby="tab-dictionary"
+        hidden
+      >
         <div class="panel-block">
           <h2 class="block-title">Keywords</h2>
+          <p class="keyword-count" id="keyword-count" aria-live="polite">
+            0 keywords
+          </p>
           <div class="field">
-            <input type="text" id="dictionary-filter" class="input" placeholder="Search…" aria-label="Filter dictionary" />
+            <input
+              type="text"
+              id="dictionary-filter"
+              class="input"
+              placeholder="Search…"
+              aria-label="Filter dictionary"
+            />
           </div>
           <div class="field-row field-row--actions">
-            <button type="button" id="add-entry-btn" class="btn btn-secondary">Add keyword</button>
-            <button type="button" id="update-dictionary-btn" class="btn btn-primary">Update</button>
+            <button type="button" id="add-entry-btn" class="btn btn-secondary">
+              Add keyword
+            </button>
           </div>
           <div class="dictionary-list-wrap">
             <div class="dictionary-empty" id="dictionary-empty-state">
               <p class="dictionary-empty-text">No keywords yet.</p>
-              <button type="button" id="dictionary-empty-add-btn" class="btn btn-primary">Add keyword</button>
+              <button
+                type="button"
+                id="dictionary-empty-add-btn"
+                class="btn btn-primary"
+              >
+                Add keyword
+              </button>
             </div>
-            <div class="dictionary-list" id="dictionary-container" role="list"></div>
+            <div
+              class="dictionary-list"
+              id="dictionary-container"
+              role="list"
+            ></div>
           </div>
         </div>
 
         <div class="panel-block">
           <h2 class="block-title">Backup</h2>
           <div class="backup-actions">
-            <button type="button" id="export-settings-btn" class="btn btn-secondary">Export</button>
-            <button type="button" id="import-settings-btn" class="btn btn-secondary">Import</button>
-            <button type="button" id="reset-defaults-btn" class="btn btn-secondary">Reset</button>
+            <button
+              type="button"
+              id="export-settings-btn"
+              class="btn btn-secondary"
+            >
+              Export
+            </button>
+            <button
+              type="button"
+              id="import-settings-btn"
+              class="btn btn-secondary"
+            >
+              Import
+            </button>
+            <button
+              type="button"
+              id="reset-defaults-btn"
+              class="btn btn-secondary"
+            >
+              Reset
+            </button>
+            <a
+              id="report-bug-link"
+              class="backup-report-link"
+              href="mailto:stcksmsh@gmail.com?subject=EmojiType%20Bug%20Report&body=Version%3A%20(see%20extension)%0A%0ADescribe%20the%20issue%3A%0A"
+              target="_blank"
+              rel="noopener"
+              >Report a bug</a
+            >
           </div>
-          <input type="file" id="import-file-input" accept=".json,application/json" hidden />
-          <div class="backup-status" id="backup-status" aria-live="polite"></div>
-          <p class="popup-footer">
-            <a id="report-bug-link" href="mailto:?stcksmsh@gmail.com=EmojiType%20Bug%20Report&body=Version%3A%20(see%20extension)%0A%0ADescribe%20the%20issue%3A%0A" target="_blank" rel="noopener">Report a bug</a>
-          </p>
+          <div class="import-choice" id="import-choice" hidden>
+            <span class="import-choice-label"
+              >Import file loaded. How to apply?</span
+            >
+            <div class="import-choice-buttons">
+              <button
+                type="button"
+                id="import-replace-btn"
+                class="btn btn-primary"
+              >
+                Replace all
+              </button>
+              <button
+                type="button"
+                id="import-merge-btn"
+                class="btn btn-secondary"
+              >
+                Merge keywords only
+              </button>
+              <button
+                type="button"
+                id="import-cancel-btn"
+                class="btn btn-secondary"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+          <input
+            type="file"
+            id="import-file-input"
+            accept=".json,application/json"
+            hidden
+          />
+          <div
+            class="backup-status"
+            id="backup-status"
+            aria-live="polite"
+          ></div>
         </div>
       </section>
     </main>

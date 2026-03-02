@@ -2,6 +2,11 @@ var delim = ":";
 getDelimiter().then((value) => {
   delim = value;
 });
+try {
+  if (typeof chrome !== "undefined" && chrome.runtime && chrome.runtime.id) {
+    window.__emojitypeExtensionId = chrome.runtime.id;
+  }
+} catch (_) {}
 
 function getDeepActiveElement(root) {
   root = root || document;
@@ -225,12 +230,7 @@ async function keyDown(event) {
         0,
         caretPos - word.length - (word ? delim.length : 0)
       );
-      applySegmentReplacement(
-        ctx,
-        tabStart,
-        caretPos,
-        DICT[replacementSug]
-      );
+      applySegmentReplacement(ctx, tabStart, caretPos, DICT[replacementSug]);
       updateSuggestions(coords.x, coords.top, coords.bottom, null);
     }
   }

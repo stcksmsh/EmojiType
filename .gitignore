@@ -3,3 +3,6 @@
 *.zip
 node_modules/
 dist/
+demo-video/videos/
+demo-video/stills/
+demo-video/tmp-profile/

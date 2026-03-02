@@ -128,12 +128,12 @@ function updateSuggestions(x, top, bottom, text) {
     window.__emojitypeSuggestionsVisible = false;
     return null;
   }
-  if (text === "") {
+  if (text === "" || text == null) {
     floatingDiv.style.display = "none";
     window.__emojitypeSuggestionsVisible = false;
     return null;
   }
-  floatingDiv.style.display = "flex";
+
   while (floatingDiv.lastChild) {
     floatingDiv.removeChild(floatingDiv.lastChild);
   }
@@ -154,12 +154,12 @@ function updateSuggestions(x, top, bottom, text) {
   });
   currentSuggestionsList = suggestions;
   currentHighlightedIndex = 0;
-  window.__emojitypeSuggestionsVisible = true;
 
   for (var i = 0; i < suggestions.length; i++) {
     var suggestion = suggestions[i];
     var row = document.createElement("div");
-    row.className = "emojitype-suggestion-row" + (i === 0 ? " emojitype-highlighted" : "");
+    row.className =
+      "emojitype-suggestion-row" + (i === 0 ? " emojitype-highlighted" : "");
     row.dataset.keyword = suggestion;
     row.setAttribute("role", "option");
     row.setAttribute("aria-selected", i === 0 ? "true" : "false");
@@ -188,23 +188,24 @@ function updateSuggestions(x, top, bottom, text) {
     floatingDiv.appendChild(row);
   }
 
-  if (window.screen.availHeight - bottom < floatingDiv.clientHeight + 150) {
-    top -= floatingDiv.clientHeight;
-    floatingDiv.style.left = x + "px";
-    floatingDiv.style.top = top + "px";
-  } else {
-    floatingDiv.style.left = x + "px";
+  // Only show after content is in place so we never paint a blank box
+  floatingDiv.style.display = "flex";
+  window.__emojitypeSuggestionsVisible = true;
+
+  var boxHeight = floatingDiv.offsetHeight;
+  var roomBelow = window.innerHeight - bottom;
+  if (roomBelow >= boxHeight) {
     floatingDiv.style.top = bottom + "px";
+  } else {
+    floatingDiv.style.top = top - boxHeight + "px";
   }
+  floatingDiv.style.left = x + "px";
 
   return suggestions[0];
 }
 
 function updateSuggestionBox() {
   floatingDiv.style.opacity = String(suggestionsOpacity);
-  if (suggestionsOn) {
-    floatingDiv.style.display = "flex";
-  } else {
-    floatingDiv.style.display = "none";
-  }
+  // Only show the box from updateSuggestions when there is content; never show an empty box here
+  floatingDiv.style.display = "none";
 }

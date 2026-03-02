@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>EmojiType</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: linear-gradient(160deg, #f0f4ff 0%, #e8eeff 100%);
+      padding: 24px;
+    }
+    .card {
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.08);
+      padding: 32px;
+      max-width: 520px;
+      width: 100%;
+    }
+    h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      color: #1a1a1a;
+      margin: 0 0 8px 0;
+    }
+    .sub {
+      font-size: 0.9rem;
+      color: #64748b;
+      margin: 0 0 24px 0;
+    }
+    textarea {
+      width: 100%;
+      min-height: 140px;
+      padding: 16px;
+      font-size: 18px;
+      line-height: 1.5;
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      resize: vertical;
+      transition: border-color 0.2s;
+    }
+    textarea:focus {
+      outline: none;
+      border-color: #2563eb;
+    }
+    textarea::placeholder {
+      color: #94a3b8;
+    }
+    .hint {
+      font-size: 0.8rem;
+      color: #94a3b8;
+      margin-top: 12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>EmojiType</h1>
+    <textarea id="input" placeholder="" autofocus></textarea>
+  </div>
+</body>
+</html>

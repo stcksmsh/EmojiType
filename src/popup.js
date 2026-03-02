@@ -7,6 +7,17 @@ var dictionary = {};
 var suggestionsOn = false;
 var suggestionsOpacity = 0.75;
 var currentTabUrl = null;
+var pendingImportData = null;
+
+function updateKeywordCount() {
+  var el = document.getElementById("keyword-count");
+  if (!el) return;
+  var container = document.getElementById("dictionary-container");
+  var count = container
+    ? container.querySelectorAll(".dictionary-element").length
+    : 0;
+  el.textContent = count === 1 ? "1 keyword" : count + " keywords";
+}
 
 function switchTab(tabId) {
   var panels = document.querySelectorAll(".tab-panel");
@@ -78,7 +89,15 @@ function initDelimiter() {
   }
   for (var i = 0; i < chips.length; i++) {
     var chip = chips[i];
-    chip.setAttribute("aria-pressed", chip.getAttribute("data-delim") === delimiter);
+    chip.setAttribute(
+      "aria-pressed",
+      chip.getAttribute("data-delim") === delimiter
+    );
+  }
+  if (isAlphanumeric(delimiter)) {
+    showDelimiterWarning("Alphanumeric delimiter can break word detection.");
+  } else {
+    showDelimiterWarning("");
   }
 }
 
@@ -98,6 +117,7 @@ function initDictionary() {
     appendDictionaryRow(container, key, dictionary[key]);
   }
   updateDictionaryEmptyState();
+  updateKeywordCount();
 }
 
 function appendDictionaryRow(container, key, value) {
@@ -126,6 +146,7 @@ function appendDictionaryRow(container, key, value) {
     row.remove();
     collectAndSendDictionary();
     updateDictionaryEmptyState();
+    updateKeywordCount();
   });
 
   keyInput.addEventListener("keydown", function (e) {
@@ -139,6 +160,11 @@ function appendDictionaryRow(container, key, value) {
       e.preventDefault();
       addNewDictionaryRow(row);
     }
+  });
+  keyInput.addEventListener("blur", collectAndSendDictionary);
+  valueInput.addEventListener("blur", function () {
+    collectAndSendDictionary();
+    updateKeywordCount();
   });
 
   row.appendChild(keyInput);
@@ -171,6 +197,7 @@ function addNewDictionaryRow(afterRow) {
     row.remove();
     collectAndSendDictionary();
     updateDictionaryEmptyState();
+    updateKeywordCount();
   });
   keyInput.addEventListener("keydown", function (e) {
     if (e.key === "Enter") {
@@ -184,6 +211,11 @@ function addNewDictionaryRow(afterRow) {
       addNewDictionaryRow(row);
     }
   });
+  keyInput.addEventListener("blur", collectAndSendDictionary);
+  valueInput.addEventListener("blur", function () {
+    collectAndSendDictionary();
+    updateKeywordCount();
+  });
   row.appendChild(keyInput);
   row.appendChild(valueInput);
   row.appendChild(deleteBtn);
@@ -193,13 +225,16 @@ function addNewDictionaryRow(afterRow) {
     container.appendChild(row);
   }
   updateDictionaryEmptyState();
+  updateKeywordCount();
   keyInput.focus();
 }
 
 function collectAndSendDictionary() {
   var container = document.getElementById("dictionary-container");
   if (!container) return;
-  var rows = container.querySelectorAll(".dictionary-element:not(.filter-hidden)");
+  var rows = container.querySelectorAll(
+    ".dictionary-element:not(.filter-hidden)"
+  );
   var items = {};
   for (var i = 0; i < rows.length; i++) {
     var keyEl = rows[i].querySelector(".dictionary-key");
@@ -217,7 +252,9 @@ function collectAndSendDictionary() {
 function updateDictionaryFromDOM() {
   var container = document.getElementById("dictionary-container");
   if (!container) return;
-  var rows = container.querySelectorAll(".dictionary-element:not(.filter-hidden)");
+  var rows = container.querySelectorAll(
+    ".dictionary-element:not(.filter-hidden)"
+  );
   var items = {};
   for (var i = 0; i < rows.length; i++) {
     var keyEl = rows[i].querySelector(".dictionary-key");
@@ -233,15 +270,20 @@ function updateDictionaryFromDOM() {
 }
 
 function filterDictionary() {
-  var q = (document.getElementById("dictionary-filter").value || "").trim().toLowerCase();
-  var rows = document.querySelectorAll("#dictionary-container .dictionary-element");
+  var q = (document.getElementById("dictionary-filter").value || "")
+    .trim()
+    .toLowerCase();
+  var rows = document.querySelectorAll(
+    "#dictionary-container .dictionary-element"
+  );
   for (var i = 0; i < rows.length; i++) {
     var row = rows[i];
     var keyEl = row.querySelector(".dictionary-key");
     var valEl = row.querySelector(".dictionary-value");
     var key = (keyEl && keyEl.value) || "";
     var val = (valEl && valEl.value) || "";
-    var match = !q || key.toLowerCase().indexOf(q) !== -1 || val.indexOf(q) !== -1;
+    var match =
+      !q || key.toLowerCase().indexOf(q) !== -1 || val.indexOf(q) !== -1;
     row.classList.toggle("filter-hidden", !match);
   }
 }
@@ -289,7 +331,11 @@ function validateRegexPatterns(lines) {
     try {
       new RegExp(lines[i]);
     } catch (e) {
-      return { valid: false, line: i + 1, message: e.message || "Invalid regex" };
+      return {
+        valid: false,
+        line: i + 1,
+        message: e.message || "Invalid regex",
+      };
     }
   }
   return { valid: true };
@@ -313,7 +359,9 @@ function updateWhitelistItems() {
   var result = validateRegexPatterns(lines);
   if (errEl) errEl.textContent = "";
   if (!result.valid) {
-    if (errEl) errEl.textContent = "Invalid regex on line " + result.line + ": " + result.message;
+    if (errEl)
+      errEl.textContent =
+        "Invalid regex on line " + result.line + ": " + result.message;
     return;
   }
   whitelistValue = lines;
@@ -330,7 +378,9 @@ function updateBlacklistItems() {
   var result = validateRegexPatterns(lines);
   if (errEl) errEl.textContent = "";
   if (!result.valid) {
-    if (errEl) errEl.textContent = "Invalid regex on line " + result.line + ": " + result.message;
+    if (errEl)
+      errEl.textContent =
+        "Invalid regex on line " + result.line + ": " + result.message;
     return;
   }
   blacklistValue = lines;
@@ -339,6 +389,18 @@ function updateBlacklistItems() {
     blacklist: { state: blacklistState, value: blacklistValue },
   });
   updateCurrentSiteStatus();
+}
+
+function showDelimiterWarning(message) {
+  var el = document.getElementById("delimiter-warning");
+  if (!el) return;
+  el.textContent = message || "";
+}
+
+function isAlphanumeric(str) {
+  if (!str || str.length !== 1) return false;
+  var c = str.charCodeAt(0);
+  return (c >= 48 && c <= 57) || (c >= 65 && c <= 90) || (c >= 97 && c <= 122);
 }
 
 function updateDelimiter() {
@@ -364,6 +426,11 @@ function updateDelimiter() {
   for (var j = 0; j < chips.length; j++) {
     var c = chips[j];
     c.setAttribute("aria-pressed", c.getAttribute("data-delim") === delimiter);
+  }
+  if (isAlphanumeric(delimiter)) {
+    showDelimiterWarning("Alphanumeric delimiter can break word detection.");
+  } else {
+    showDelimiterWarning("");
   }
   chrome.runtime.sendMessage({ action: "set", delim: delimiter });
   updateShortcutHint();
@@ -392,7 +459,8 @@ function updateDelimiterPreview() {
   var keys = Object.keys(dictionary || {});
   var firstKey = keys[0];
   if (firstKey && dictionary[firstKey]) {
-    el.textContent = "Preview: " + d + firstKey + d + " \u2192 " + dictionary[firstKey];
+    el.textContent =
+      "Preview: " + d + firstKey + d + " \u2192 " + dictionary[firstKey];
   } else {
     el.textContent = "Preview: (add keywords in Dictionary tab)";
   }
@@ -412,11 +480,26 @@ function setBackupStatus(message, isError) {
 function exportSettings() {
   (async function () {
     try {
-      var whitelist = await chrome.runtime.sendMessage({ action: "get", whitelist: true });
-      var blacklist = await chrome.runtime.sendMessage({ action: "get", blacklist: true });
-      var delim = await chrome.runtime.sendMessage({ action: "get", delim: true });
-      var dict = await chrome.runtime.sendMessage({ action: "get", dictionary: true });
-      var suggestions = await chrome.runtime.sendMessage({ action: "get", suggestions: true });
+      var whitelist = await chrome.runtime.sendMessage({
+        action: "get",
+        whitelist: true,
+      });
+      var blacklist = await chrome.runtime.sendMessage({
+        action: "get",
+        blacklist: true,
+      });
+      var delim = await chrome.runtime.sendMessage({
+        action: "get",
+        delim: true,
+      });
+      var dict = await chrome.runtime.sendMessage({
+        action: "get",
+        dictionary: true,
+      });
+      var suggestions = await chrome.runtime.sendMessage({
+        action: "get",
+        suggestions: true,
+      });
       var data = {
         whitelist: whitelist,
         blacklist: blacklist,
@@ -424,7 +507,9 @@ function exportSettings() {
         dictionary: dict,
         suggestions: suggestions,
       };
-      var blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      var blob = new Blob([JSON.stringify(data, null, 2)], {
+        type: "application/json",
+      });
       var a = document.createElement("a");
       a.href = URL.createObjectURL(blob);
       a.download = "emojitype-settings.json";
@@ -437,8 +522,137 @@ function exportSettings() {
   })();
 }
 
+function exportDictionaryOnly() {
+  (async function () {
+    try {
+      var dict = await chrome.runtime.sendMessage({
+        action: "get",
+        dictionary: true,
+      });
+      var data = { dictionary: dict || {} };
+      var blob = new Blob([JSON.stringify(data, null, 2)], {
+        type: "application/json",
+      });
+      var a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "emojitype-dictionary.json";
+      a.click();
+      URL.revokeObjectURL(a.href);
+      setBackupStatus("Dictionary exported.");
+    } catch (err) {
+      setBackupStatus("Export failed.", true);
+    }
+  })();
+}
+
 function importSettings() {
+  pendingImportData = null;
+  var choiceEl = document.getElementById("import-choice");
+  if (choiceEl) choiceEl.hidden = true;
   document.getElementById("import-file-input").click();
+}
+
+function applyImportReplace() {
+  if (!pendingImportData) return;
+  var data = pendingImportData;
+  pendingImportData = null;
+  document.getElementById("import-choice").hidden = true;
+  document.getElementById("import-file-input").value = "";
+  (async function () {
+    try {
+      if (data.whitelist != null) {
+        await chrome.runtime.sendMessage({
+          action: "set",
+          whitelist: {
+            state:
+              data.whitelist.state === true || data.whitelist.state === "on",
+            value: Array.isArray(data.whitelist.value)
+              ? data.whitelist.value
+              : [],
+          },
+        });
+      }
+      if (data.blacklist != null) {
+        await chrome.runtime.sendMessage({
+          action: "set",
+          blacklist: {
+            state:
+              data.blacklist.state === true || data.blacklist.state === "on",
+            value: Array.isArray(data.blacklist.value)
+              ? data.blacklist.value
+              : [],
+          },
+        });
+      }
+      if (data.delim != null) {
+        await chrome.runtime.sendMessage({
+          action: "set",
+          delim: String(data.delim),
+        });
+      }
+      if (data.dictionary != null) {
+        await chrome.runtime.sendMessage({
+          action: "set",
+          dictionary: data.dictionary,
+        });
+      }
+      if (data.suggestions != null) {
+        await chrome.runtime.sendMessage({
+          action: "set",
+          suggestions: {
+            state:
+              data.suggestions.state === true ||
+              data.suggestions.state === "on",
+            opacity:
+              typeof data.suggestions.opacity === "number"
+                ? data.suggestions.opacity
+                : 0.75,
+          },
+        });
+      }
+      await init();
+      setBackupStatus("Settings imported.");
+    } catch (err) {
+      setBackupStatus("Import failed.", true);
+    }
+  })();
+}
+
+function applyImportMerge() {
+  if (
+    !pendingImportData ||
+    !pendingImportData.dictionary ||
+    typeof pendingImportData.dictionary !== "object"
+  )
+    return;
+  var imported = pendingImportData.dictionary;
+  pendingImportData = null;
+  document.getElementById("import-choice").hidden = true;
+  document.getElementById("import-file-input").value = "";
+  (async function () {
+    try {
+      var current = await chrome.runtime.sendMessage({
+        action: "get",
+        dictionary: true,
+      });
+      current = current || {};
+      for (var k in imported) {
+        if (imported.hasOwnProperty(k) && k) current[k] = imported[k];
+      }
+      await chrome.runtime.sendMessage({ action: "set", dictionary: current });
+      await init();
+      setBackupStatus("Dictionary merged.");
+    } catch (err) {
+      setBackupStatus("Merge failed.", true);
+    }
+  })();
+}
+
+function cancelImportChoice() {
+  pendingImportData = null;
+  var choiceEl = document.getElementById("import-choice");
+  if (choiceEl) choiceEl.hidden = true;
+  document.getElementById("import-file-input").value = "";
 }
 
 function onImportFileChange(event) {
@@ -453,48 +667,9 @@ function onImportFileChange(event) {
         event.target.value = "";
         return;
       }
-      (async function () {
-        try {
-          if (data.whitelist != null) {
-            await chrome.runtime.sendMessage({
-              action: "set",
-              whitelist: {
-                state: data.whitelist.state === true || data.whitelist.state === "on",
-                value: Array.isArray(data.whitelist.value) ? data.whitelist.value : [],
-              },
-            });
-          }
-          if (data.blacklist != null) {
-            await chrome.runtime.sendMessage({
-              action: "set",
-              blacklist: {
-                state: data.blacklist.state === true || data.blacklist.state === "on",
-                value: Array.isArray(data.blacklist.value) ? data.blacklist.value : [],
-              },
-            });
-          }
-          if (data.delim != null) {
-            await chrome.runtime.sendMessage({ action: "set", delim: String(data.delim) });
-          }
-          if (data.dictionary != null) {
-            await chrome.runtime.sendMessage({ action: "set", dictionary: data.dictionary });
-          }
-          if (data.suggestions != null) {
-            await chrome.runtime.sendMessage({
-              action: "set",
-              suggestions: {
-                state: data.suggestions.state === true || data.suggestions.state === "on",
-                opacity: typeof data.suggestions.opacity === "number" ? data.suggestions.opacity : 0.75,
-              },
-            });
-          }
-          await init();
-          setBackupStatus("Settings imported.");
-        } catch (err) {
-          setBackupStatus("Import failed.", true);
-        }
-        event.target.value = "";
-      })();
+      pendingImportData = data;
+      var choiceEl = document.getElementById("import-choice");
+      if (choiceEl) choiceEl.hidden = false;
     } catch (err) {
       setBackupStatus("Invalid JSON: " + (err.message || "parse error"), true);
       event.target.value = "";
@@ -504,7 +679,8 @@ function onImportFileChange(event) {
 }
 
 function resetToDefaults() {
-  if (!confirm("Reset all settings to defaults? This cannot be undone.")) return;
+  if (!confirm("Reset all settings to defaults? This cannot be undone."))
+    return;
   chrome.runtime.sendMessage({ action: "resetDefaults" }, function () {
     init();
     setBackupStatus("Reset to defaults done.");
@@ -521,74 +697,89 @@ function updateCurrentSiteStatus() {
     actionsEl.innerHTML = "";
     return;
   }
-  chrome.runtime.sendMessage({ action: "get", urlStatus: currentTabUrl }, function (res) {
-    if (!res || res.active === undefined) {
-      statusEl.textContent = "—";
-      statusEl.className = "status-value";
-      actionsEl.innerHTML = "";
-      return;
-    }
-    if (res.active) {
-      statusEl.textContent = "Active";
-      statusEl.className = "status-value active";
-    } else {
-      statusEl.textContent = "Off";
-      statusEl.className = "status-value off";
-    }
-    try {
-      var origin = new URL(currentTabUrl).origin;
-      var pattern = origin.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + ".*";
-      actionsEl.innerHTML = "";
-      if (res.active) {
-        var btnDisable = document.createElement("button");
-        btnDisable.type = "button";
-        btnDisable.className = "btn btn-secondary";
-        btnDisable.textContent = "Disable on this site";
-        btnDisable.addEventListener("click", function () {
-          blacklistValue = blacklistValue || [];
-          if (blacklistValue.indexOf(pattern) === -1) blacklistValue.push(pattern);
-          chrome.runtime.sendMessage({
-            action: "set",
-            blacklist: { state: true, value: blacklistValue },
-          });
-          blacklistState = true;
-          document.getElementById("blacklist-toggle").textContent = "ON";
-          document.getElementById("blacklist-toggle").classList.add("active");
-          document.getElementById("blacklist-toggle").setAttribute("aria-checked", "true");
-          initBlacklist();
-          updateCurrentSiteStatus();
-        });
-        actionsEl.appendChild(btnDisable);
-      } else {
-        var btnEnable = document.createElement("button");
-        btnEnable.type = "button";
-        btnEnable.className = "btn btn-secondary";
-        btnEnable.textContent = "Enable on this site";
-        btnEnable.addEventListener("click", function () {
-          whitelistValue = whitelistValue || [];
-          if (whitelistValue.indexOf(pattern) === -1) whitelistValue.push(pattern);
-          chrome.runtime.sendMessage({
-            action: "set",
-            whitelist: { state: true, value: whitelistValue },
-          });
-          whitelistState = true;
-          document.getElementById("whitelist-toggle").textContent = "ON";
-          document.getElementById("whitelist-toggle").classList.add("active");
-          document.getElementById("whitelist-toggle").setAttribute("aria-checked", "true");
-          initWhitelist();
-          updateCurrentSiteStatus();
-        });
-        actionsEl.appendChild(btnEnable);
+  chrome.runtime.sendMessage(
+    { action: "get", urlStatus: currentTabUrl },
+    function (res) {
+      if (!res || res.active === undefined) {
+        statusEl.textContent = "—";
+        statusEl.className = "status-value";
+        actionsEl.innerHTML = "";
+        return;
       }
-    } catch (_) {
-      actionsEl.innerHTML = "";
+      if (res.active) {
+        statusEl.textContent = "Active";
+        statusEl.className = "status-value active";
+      } else {
+        statusEl.textContent = "Off";
+        statusEl.className = "status-value off";
+      }
+      try {
+        var origin = new URL(currentTabUrl).origin;
+        var pattern = origin.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + ".*";
+        actionsEl.innerHTML = "";
+        if (res.active) {
+          var btnDisable = document.createElement("button");
+          btnDisable.type = "button";
+          btnDisable.className = "btn btn-secondary";
+          btnDisable.textContent = "Disable on this site";
+          btnDisable.addEventListener("click", function () {
+            blacklistValue = blacklistValue || [];
+            if (blacklistValue.indexOf(pattern) === -1)
+              blacklistValue.push(pattern);
+            chrome.runtime.sendMessage({
+              action: "set",
+              blacklist: { state: true, value: blacklistValue },
+            });
+            blacklistState = true;
+            document.getElementById("blacklist-toggle").textContent = "ON";
+            document.getElementById("blacklist-toggle").classList.add("active");
+            document
+              .getElementById("blacklist-toggle")
+              .setAttribute("aria-checked", "true");
+            initBlacklist();
+            updateCurrentSiteStatus();
+          });
+          actionsEl.appendChild(btnDisable);
+        } else {
+          var btnEnable = document.createElement("button");
+          btnEnable.type = "button";
+          btnEnable.className = "btn btn-secondary";
+          btnEnable.textContent = "Enable on this site";
+          btnEnable.addEventListener("click", function () {
+            whitelistValue = whitelistValue || [];
+            if (whitelistValue.indexOf(pattern) === -1)
+              whitelistValue.push(pattern);
+            chrome.runtime.sendMessage({
+              action: "set",
+              whitelist: { state: true, value: whitelistValue },
+            });
+            whitelistState = true;
+            document.getElementById("whitelist-toggle").textContent = "ON";
+            document.getElementById("whitelist-toggle").classList.add("active");
+            document
+              .getElementById("whitelist-toggle")
+              .setAttribute("aria-checked", "true");
+            initWhitelist();
+            updateCurrentSiteStatus();
+          });
+          actionsEl.appendChild(btnEnable);
+        }
+      } catch (_) {
+        actionsEl.innerHTML = "";
+      }
     }
-  });
+  );
 }
 
 async function init() {
-  var whitelistRes = await chrome.runtime.sendMessage({ action: "get", whitelist: true });
-  var blacklistRes = await chrome.runtime.sendMessage({ action: "get", blacklist: true });
+  var whitelistRes = await chrome.runtime.sendMessage({
+    action: "get",
+    whitelist: true,
+  });
+  var blacklistRes = await chrome.runtime.sendMessage({
+    action: "get",
+    blacklist: true,
+  });
   whitelistState = whitelistRes.state === true || whitelistRes.state === "on";
   whitelistValue = whitelistRes.value || [];
   blacklistState = blacklistRes.state === true || blacklistRes.state === "on";
@@ -608,9 +799,15 @@ async function init() {
   }
 
   delimiter = await chrome.runtime.sendMessage({ action: "get", delim: true });
-  dictionary = await chrome.runtime.sendMessage({ action: "get", dictionary: true }) || {};
-  var suggestionsRes = await chrome.runtime.sendMessage({ action: "get", suggestions: true });
-  suggestionsOn = suggestionsRes.state === true || suggestionsRes.state === "on";
+  dictionary =
+    (await chrome.runtime.sendMessage({ action: "get", dictionary: true })) ||
+    {};
+  var suggestionsRes = await chrome.runtime.sendMessage({
+    action: "get",
+    suggestions: true,
+  });
+  suggestionsOn =
+    suggestionsRes.state === true || suggestionsRes.state === "on";
   suggestionsOpacity = suggestionsRes.opacity;
 
   initWhitelist();
@@ -619,6 +816,7 @@ async function init() {
   initDictionary();
   updateShortcutHint();
   updateDelimiterPreview();
+  updateKeywordCount();
 
   var sToggle = document.getElementById("suggestions-toggle");
   if (sToggle) {
@@ -664,47 +862,124 @@ function setupListeners() {
         input.placeholder = d;
       }
       delimiter = d;
+      if (isAlphanumeric(delimiter)) {
+        showDelimiterWarning(
+          "Alphanumeric delimiter can break word detection."
+        );
+      } else {
+        showDelimiterWarning("");
+      }
       chrome.runtime.sendMessage({ action: "set", delim: delimiter });
       updateShortcutHint();
       updateDelimiterPreview();
     });
   });
 
-  document.getElementById("delimiter-input").addEventListener("change", updateDelimiter);
-  document.getElementById("delimiter-input").addEventListener("keydown", function (e) {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      updateDelimiter();
-    }
-  });
-  document.getElementById("update-delimiter-btn").addEventListener("click", updateDelimiter);
+  document
+    .getElementById("delimiter-input")
+    .addEventListener("change", updateDelimiter);
+  document
+    .getElementById("delimiter-input")
+    .addEventListener("keydown", function (e) {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        updateDelimiter();
+      }
+    });
+  document
+    .getElementById("update-delimiter-btn")
+    .addEventListener("click", updateDelimiter);
 
-  document.getElementById("whitelist-toggle").addEventListener("click", toggleWhitelist);
-  document.getElementById("blacklist-toggle").addEventListener("click", toggleBlacklist);
-  document.getElementById("suggestions-toggle").addEventListener("click", toggleSuggestions);
-  document.getElementById("whitelist-add-btn").addEventListener("click", function () {
-    appendPatternRow("whitelist-list", "");
-  });
-  document.getElementById("blacklist-add-btn").addEventListener("click", function () {
-    appendPatternRow("blacklist-list", "");
-  });
-  document.getElementById("update-whitelist-btn").addEventListener("click", updateWhitelistItems);
-  document.getElementById("update-blacklist-btn").addEventListener("click", updateBlacklistItems);
-  document.getElementById("update-dictionary-btn").addEventListener("click", updateDictionaryFromDOM);
-  document.getElementById("add-entry-btn").addEventListener("click", function () {
-    var container = document.getElementById("dictionary-container");
-    if (container) addNewDictionaryRow(container.lastElementChild || null);
-  });
-  document.getElementById("dictionary-empty-add-btn").addEventListener("click", function () {
-    var container = document.getElementById("dictionary-container");
-    if (container) addNewDictionaryRow(null);
-  });
-  document.getElementById("opacity-slider").addEventListener("input", updateSuggestionsOpacity);
-  document.getElementById("dictionary-filter").addEventListener("input", filterDictionary);
-  document.getElementById("export-settings-btn").addEventListener("click", exportSettings);
-  document.getElementById("import-settings-btn").addEventListener("click", importSettings);
-  document.getElementById("import-file-input").addEventListener("change", onImportFileChange);
-  document.getElementById("reset-defaults-btn").addEventListener("click", resetToDefaults);
+  document
+    .getElementById("whitelist-toggle")
+    .addEventListener("click", toggleWhitelist);
+  document
+    .getElementById("blacklist-toggle")
+    .addEventListener("click", toggleBlacklist);
+  document
+    .getElementById("suggestions-toggle")
+    .addEventListener("click", toggleSuggestions);
+  document
+    .getElementById("whitelist-add-btn")
+    .addEventListener("click", function () {
+      appendPatternRow("whitelist-list", "");
+    });
+  document
+    .getElementById("blacklist-add-btn")
+    .addEventListener("click", function () {
+      appendPatternRow("blacklist-list", "");
+    });
+  if (updateBlacklistBtn)
+    updateBlacklistBtn.addEventListener("click", updateBlacklistItems);
+
+  var updateDictBtn = document.getElementById("update-dictionary-btn");
+  if (updateDictBtn)
+    updateDictBtn.addEventListener("click", updateDictionaryFromDOM);
+  document
+    .getElementById("add-entry-btn")
+    .addEventListener("click", function () {
+      var container = document.getElementById("dictionary-container");
+      if (container) addNewDictionaryRow(container.lastElementChild || null);
+    });
+  document
+    .getElementById("dictionary-empty-add-btn")
+    .addEventListener("click", function () {
+      var container = document.getElementById("dictionary-container");
+      if (container) addNewDictionaryRow(null);
+    });
+  document
+    .getElementById("opacity-slider")
+    .addEventListener("input", updateSuggestionsOpacity);
+  document
+    .getElementById("dictionary-filter")
+    .addEventListener("input", filterDictionary);
+  document
+    .getElementById("export-settings-btn")
+    .addEventListener("click", exportSettings);
+  var exportDictBtn = document.getElementById("export-dictionary-btn");
+  if (exportDictBtn)
+    exportDictBtn.addEventListener("click", exportDictionaryOnly);
+  document
+    .getElementById("import-settings-btn")
+    .addEventListener("click", importSettings);
+  document
+    .getElementById("import-file-input")
+    .addEventListener("change", onImportFileChange);
+  document
+    .getElementById("import-replace-btn")
+    .addEventListener("click", applyImportReplace);
+  document
+    .getElementById("import-merge-btn")
+    .addEventListener("click", applyImportMerge);
+  document
+    .getElementById("import-cancel-btn")
+    .addEventListener("click", cancelImportChoice);
+  document
+    .getElementById("reset-defaults-btn")
+    .addEventListener("click", resetToDefaults);
+
+  var helpToggle = document.getElementById("help-toggle");
+  var helpContent = document.getElementById("help-content");
+  if (helpToggle && helpContent) {
+    helpToggle.addEventListener("click", function () {
+      var expanded = helpContent.hidden;
+      helpContent.hidden = !expanded;
+      helpToggle.setAttribute("aria-expanded", expanded);
+    });
+  }
+  var openShortcutsBtn = document.getElementById("open-shortcuts-btn");
+  if (openShortcutsBtn) {
+    openShortcutsBtn.addEventListener("click", function () {
+      chrome.tabs.create({ url: "chrome://extensions/shortcuts" });
+    });
+  }
+
+  var updateWhitelistBtn = document.getElementById("update-whitelist-btn");
+  var updateBlacklistBtn = document.getElementById("update-blacklist-btn");
+  if (updateWhitelistBtn)
+    updateWhitelistBtn.addEventListener("click", updateWhitelistItems);
+  if (updateBlacklistBtn)
+    updateBlacklistBtn.addEventListener("click", updateBlacklistItems);
 
   document.querySelectorAll(".theme-chip").forEach(function (chip) {
     chip.addEventListener("click", function () {

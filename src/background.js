@@ -75,8 +75,7 @@ function setupMessageListener() {
           sendResponse({ state: suggestionsOn, opacity: suggestionsOpacity });
         } else if (request.urlStatus !== undefined) {
           var url = request.urlStatus;
-          var active =
-            IsUrlWhitelisted(url) && !IsUrlBlacklisted(url);
+          var active = IsUrlWhitelisted(url) && !IsUrlBlacklisted(url);
           sendResponse({ active: active });
         } else {
           sendResponse("");

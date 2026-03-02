@@ -39,10 +39,10 @@ body {
   padding: var(--space);
   background: var(--bg);
   color: var(--text);
-  min-width: 340px;
-  max-width: 400px;
-  min-height: 320px;
-  max-height: 480px;
+  min-width: 380px;
+  max-width: 460px;
+  min-height: 520px;
+  max-height: 660px;
 }
 
 .header {
@@ -62,6 +62,82 @@ body {
   font-size: 11px;
   color: var(--text-muted);
   margin: 0;
+}
+
+.help-wrap {
+  margin-top: var(--space);
+}
+
+.help-toggle {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 12px;
+  color: var(--primary);
+  cursor: pointer;
+  font-family: inherit;
+  text-decoration: underline;
+}
+
+.help-toggle:hover {
+  color: var(--primary-hover);
+}
+
+.help-toggle:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: 2px;
+}
+
+.help-content {
+  margin-top: var(--space);
+  padding: var(--space) 0 0 0;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.help-content ul {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.help-content li {
+  margin-bottom: 4px;
+}
+
+.help-content code {
+  font-size: 11px;
+  background: var(--surface);
+  padding: 1px 4px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+}
+
+.shortcut-tip {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin: var(--space) 0 0 0;
+}
+
+.link-button {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: inherit;
+  color: var(--primary);
+  cursor: pointer;
+  font-family: inherit;
+  text-decoration: underline;
+}
+
+.link-button:hover {
+  color: var(--primary-hover);
+}
+
+.link-button:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: 2px;
 }
 
 .tabs {
@@ -84,7 +160,9 @@ body {
   cursor: pointer;
   border-radius: 4px;
   font-family: inherit;
-  transition: background 0.15s, color 0.15s;
+  transition:
+    background 0.15s,
+    color 0.15s;
 }
 
 .tab:hover {
@@ -206,6 +284,12 @@ body {
   margin: 0 0 var(--space) 0;
 }
 
+.keyword-count {
+  font-size: 11px;
+  color: var(--text-muted);
+  margin: 0 0 var(--space) 0;
+}
+
 .field-row--actions {
   margin-bottom: var(--space);
 }
@@ -284,6 +368,11 @@ body {
   margin: var(--space) 0 0 0;
 }
 
+.delimiter-warning {
+  margin-top: 2px;
+  margin-bottom: 0;
+}
+
 .chip {
   width: 36px;
   height: 32px;
@@ -295,7 +384,9 @@ body {
   font-size: 14px;
   cursor: pointer;
   font-family: inherit;
-  transition: background 0.15s, border-color 0.15s;
+  transition:
+    background 0.15s,
+    border-color 0.15s;
 }
 
 .chip:hover {
@@ -326,7 +417,9 @@ body {
   font-weight: 600;
   cursor: pointer;
   font-family: inherit;
-  transition: background 0.2s, color 0.2s;
+  transition:
+    background 0.2s,
+    color 0.2s;
 }
 
 .toggle:hover {
@@ -486,7 +579,6 @@ body {
   gap: 0;
 }
 
-
 .dictionary-element {
   display: grid;
   grid-template-columns: 1fr auto auto;
@@ -547,7 +639,50 @@ body {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space);
+  margin-bottom: var(--space);
+  align-items: center;
+}
+
+.backup-report-link {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--primary);
+  text-decoration: none;
+}
+
+.backup-report-link:hover {
+  color: var(--primary-hover);
+  text-decoration: underline;
+}
+
+.backup-report-link:focus-visible {
+  outline: none;
+  box-shadow: var(--focus-ring);
+  border-radius: 2px;
+}
+
+.import-choice {
   margin-bottom: var(--space-lg);
+  padding: var(--space);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+
+.import-choice[hidden] {
+  display: none;
+}
+
+.import-choice-label {
+  display: block;
+  font-size: 12px;
+  margin-bottom: var(--space);
+}
+
+.import-choice-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space);
 }
 
 .backup-status {
