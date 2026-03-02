@@ -85,14 +85,10 @@ function initDictionary() {
 
 // Function to toggle whitelist
 function toggleWhitelist() {
+  whitelistState = !whitelistState;
   var whitelistToggle = document.getElementById("whitelist-toggle");
-  whitelistToggle.classList.toggle("active");
-  if (whitelistState === "on") {
-    whitelistState = "off";
-  } else {
-    whitelistState = "on";
-  }
-  whitelistToggle.innerText = whitelistState.toUpperCase();
+  whitelistToggle.classList.toggle("active", whitelistState);
+  whitelistToggle.innerText = whitelistState ? "ON" : "OFF";
   chrome.runtime.sendMessage({
     action: "set",
     whitelist: { state: whitelistState, value: whitelistValue },
@@ -101,14 +97,10 @@ function toggleWhitelist() {
 
 // Function to toggle blacklist
 function toggleBlacklist() {
+  blacklistState = !blacklistState;
   var blacklistToggle = document.getElementById("blacklist-toggle");
-  blacklistToggle.classList.toggle("active");
-  if (blacklistState === "off") {
-    blacklistState = "on";
-  } else {
-    blacklistState = "off";
-  }
-  blacklistToggle.innerText = blacklistState.toUpperCase();
+  blacklistToggle.classList.toggle("active", blacklistState);
+  blacklistToggle.innerText = blacklistState ? "ON" : "OFF";
   chrome.runtime.sendMessage({
     action: "set",
     blacklist: { state: blacklistState, value: blacklistValue },
@@ -117,14 +109,10 @@ function toggleBlacklist() {
 
 // Function to toggle suggestions
 function toggleSuggestions() {
+  suggestionsOn = !suggestionsOn;
   var suggestionsToggle = document.getElementById("suggestions-toggle");
-  suggestionsToggle.classList.toggle("active");
-  if (suggestionsOn === "off") {
-    suggestionsOn = "on";
-  } else {
-    suggestionsOn = "off";
-  }
-  suggestionsToggle.innerText = suggestionsOn.toUpperCase();
+  suggestionsToggle.classList.toggle("active", suggestionsOn);
+  suggestionsToggle.innerText = suggestionsOn ? "ON" : "OFF";
   chrome.runtime.sendMessage({
     action: "set",
     suggestions: { state: suggestionsOn, opacity: suggestionsOpacity },
@@ -265,18 +253,24 @@ async function init() {
     action: "get",
     blacklist: true,
   });
-  whitelistState = whitelistValue.state;
+  whitelistState =
+    whitelistValue.state === true || whitelistValue.state === "on";
   whitelistValue = whitelistValue.value;
-  blacklistState = blacklistValue.state;
+  blacklistState =
+    blacklistValue.state === true || blacklistValue.state === "on";
   blacklistValue = blacklistValue.value;
-  if (whitelistState === "on") {
-    document.getElementById("whitelist-toggle").classList.toggle("active");
-    document.getElementById("whitelist-toggle").innerText = "ON";
-  }
-  if (blacklistState === "on") {
-    document.getElementById("blacklist-toggle").classList.toggle("active");
-    document.getElementById("blacklist-toggle").innerText = "ON";
-  }
+  document
+    .getElementById("whitelist-toggle")
+    .classList.toggle("active", whitelistState);
+  document.getElementById("whitelist-toggle").innerText = whitelistState
+    ? "ON"
+    : "OFF";
+  document
+    .getElementById("blacklist-toggle")
+    .classList.toggle("active", blacklistState);
+  document.getElementById("blacklist-toggle").innerText = blacklistState
+    ? "ON"
+    : "OFF";
   delimiter = await chrome.runtime.sendMessage({ action: "get", delim: true });
   dictionary = await chrome.runtime.sendMessage({
     action: "get",
@@ -292,12 +286,15 @@ async function init() {
     action: "get",
     suggestions: true,
   });
-  suggestionsOn = suggestions.state;
+  suggestionsOn =
+    suggestions.state === true || suggestions.state === "on";
   suggestionsOpacity = suggestions.opacity;
-  if (suggestionsOn === "on") {
-    document.getElementById("suggestions-toggle").classList.toggle("active");
-    document.getElementById("suggestions-toggle").innerText = "ON";
-  }
+  document
+    .getElementById("suggestions-toggle")
+    .classList.toggle("active", suggestionsOn);
+  document.getElementById("suggestions-toggle").innerText = suggestionsOn
+    ? "ON"
+    : "OFF";
   document.getElementById("opacity-slider").value = suggestionsOpacity;
 
   // Add event listeners after the fact

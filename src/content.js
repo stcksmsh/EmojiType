@@ -1,4 +1,4 @@
-var delim = ";";
+var delim = ":";
 getDelimiter().then((value) => {
   delim = value;
 });

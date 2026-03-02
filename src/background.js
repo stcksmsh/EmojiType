@@ -60,7 +60,7 @@ chrome.storage.local.get({ dictionary: defaultDictionary }, function (result) {
   }
 });
 
-chrome.storage.local.get({ delim: ";" }, function (result) {
+chrome.storage.local.get({ delim: ":" }, function (result) {
   delim = result.delim;
 });
 
@@ -128,14 +128,16 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
       notifyTabs({ action: "set", key: request.key, value: request.value });
     } else if (request.whitelist !== undefined) {
       whitelistValue = request.whitelist.value;
-      whitelistOn = request.whitelist.state;
+      whitelistOn =
+        request.whitelist.state === true || request.whitelist.state === "on";
       chrome.storage.local.set({
         whitelist: { state: whitelistOn, value: whitelistValue },
       });
       sendResponse("success");
     } else if (request.blacklist !== undefined) {
       blacklistValue = request.blacklist.value;
-      blacklistOn = request.blacklist.state;
+      blacklistOn =
+        request.blacklist.state === true || request.blacklist.state === "on";
       chrome.storage.local.set({
         blacklist: { state: blacklistOn, value: blacklistValue },
       });
@@ -154,7 +156,9 @@ chrome.runtime.onMessage.addListener(function (request, sender, sendResponse) {
       sendResponse("success");
       notifyTabs({ action: "set", delim: delim });
     } else if (request.suggestions !== undefined) {
-      suggestionsOn = request.suggestions.state;
+      suggestionsOn =
+        request.suggestions.state === true ||
+        request.suggestions.state === "on";
       suggestionsOpacity = request.suggestions.opacity;
       chrome.storage.local.set({
         suggestions: { state: suggestionsOn, opacity: suggestionsOpacity },
@@ -176,7 +180,7 @@ function IsUrlWhitelisted(url) {
   if (url == undefined) {
     return false;
   }
-  if (whitelistOn == "on") {
+  if (whitelistOn === true) {
     for (let pattern of whitelistValue) {
       if (url.match(pattern)) {
         return true;
@@ -191,7 +195,7 @@ function IsUrlBlacklisted(url) {
   if (url == undefined) {
     return false;
   }
-  if (blacklistOn == "on") {
+  if (blacklistOn === true) {
     for (let pattern of blacklistValue) {
       if (url.match(pattern)) {
         return true;
