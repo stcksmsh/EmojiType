@@ -1,112 +1,107 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Extension Popup</title>
+    <title>EmojiType</title>
     <link rel="stylesheet" type="text/css" href="popup.css" />
   </head>
   <body>
-    <div class="upper-section">
-      <div class="list-section">
-        <h2>Website Whitelist</h2>
-        <label class="toggle-label" for="whitelist-toggle"
-          >Toggle Whitelist</label
-        >
-        <div class="toggle-button" id="whitelist-toggle">OFF</div>
-        <br />
-        <div
-          class="whitelist-container container"
-          id="whitelist-container"
-          contenteditable="true"
-        ></div>
-        <br />
-        <button id="update-whitelist-btn" class="update-button">Update</button>
-      </div>
-      <div class="delimiter-section">
-        <h2>Delimiter</h2>
-        <br />
-        <div
-          class="container delimiter-container"
-          id="delimiter-container"
-          contenteditable="true"
-        ></div>
-        <button id="update-delimiter-btn" class="update-button">Update</button>
-      </div>
-      <div class="list-section">
-        <h2>Website Blacklist</h2>
-        <label class="toggle-label" for="blacklist-toggle"
-          >Toggle Blacklist</label
-        >
-        <div class="toggle-button" id="blacklist-toggle">OFF</div>
-        <br />
-        <div
-          class="blacklist-container container"
-          id="blacklist-container"
-          contenteditable="true"
-        ></div>
-        <br />
-        <button id="update-blacklist-btn" class="update-button">Update</button>
-      </div>
-    </div>
-    <div class="middle-section">
-      <div class="list-section">
-        <h2>Extension Dictionary</h2>
-        <div
-          class="container dictionary-container"
-          id="dictionary-container"
-        ></div>
-        <br />
-        <button
-          id="update-dictionary-btn"
-          class="update-button"
-          style="margin-left: 20px"
-        >
-          Update
-        </button>
-      </div>
-    </div>
-    <div class="lower-section">
-      <div class="list-section">
-        <h2>Suggestions</h2>
-        <div
-          class="toggle-button"
-          id="suggestions-toggle"
-          style="align-self: center"
-        >
-          OFF
+    <header class="header">
+      <h1 class="header-title">EmojiType</h1>
+      <p class="header-subtitle" id="shortcut-hint">Type :keyword: or :keyword + Tab</p>
+    </header>
+
+    <nav class="tabs" role="tablist" aria-label="Settings sections">
+      <button type="button" class="tab" role="tab" id="tab-sites" aria-selected="true" aria-controls="panel-sites" data-tab="sites">Sites</button>
+      <button type="button" class="tab" role="tab" id="tab-options" aria-selected="false" aria-controls="panel-options" data-tab="options">Options</button>
+      <button type="button" class="tab" role="tab" id="tab-dictionary" aria-selected="false" aria-controls="panel-dictionary" data-tab="dictionary">Dictionary</button>
+    </nav>
+
+    <main class="main">
+      <section id="panel-sites" class="tab-panel active" role="tabpanel" aria-labelledby="tab-sites">
+        <div class="status-block" id="current-site-status">
+          <span class="status-label">This site:</span>
+          <span class="status-value" id="status-value">—</span>
+          <div class="status-actions" id="status-actions"></div>
         </div>
-        <div>
-          <input
-            type="range"
-            min="0"
-            max="1"
-            value="0.5"
-            step="0.01"
-            class="slider"
-            id="opacity-slider"
-            style="align-self: center"
-          />
+
+        <div class="field">
+          <div class="field-row">
+            <span class="label">Whitelist</span>
+            <button type="button" class="toggle" id="whitelist-toggle" role="switch" aria-checked="false">OFF</button>
+          </div>
+          <textarea id="whitelist-textarea" class="textarea textarea--short" rows="2" placeholder="One URL pattern per line" spellcheck="false"></textarea>
+          <button type="button" id="update-whitelist-btn" class="btn btn-primary">Update</button>
         </div>
-      </div>
-      <div class="list-section backup-section">
-        <h2>Backup</h2>
-        <div class="backup-buttons">
-          <button id="export-settings-btn" class="update-button">
-            Export settings
-          </button>
-          <button id="import-settings-btn" class="update-button">
-            Import settings
-          </button>
+
+        <div class="field">
+          <div class="field-row">
+            <span class="label">Blacklist</span>
+            <button type="button" class="toggle" id="blacklist-toggle" role="switch" aria-checked="false">OFF</button>
+          </div>
+          <textarea id="blacklist-textarea" class="textarea textarea--short" rows="2" placeholder="One URL pattern per line" spellcheck="false"></textarea>
+          <button type="button" id="update-blacklist-btn" class="btn btn-primary">Update</button>
         </div>
-        <input
-          type="file"
-          id="import-file-input"
-          accept=".json,application/json"
-          style="display: none"
-        />
-      </div>
-    </div>
+      </section>
+
+      <section id="panel-options" class="tab-panel" role="tabpanel" aria-labelledby="tab-options" hidden>
+        <div class="field">
+          <label class="label" for="delimiter-input">Delimiter</label>
+          <div class="delimiter-row">
+            <button type="button" class="chip chip--delim" data-delim=":" aria-pressed="false">:</button>
+            <button type="button" class="chip chip--delim" data-delim=";" aria-pressed="false">;</button>
+            <input type="text" id="delimiter-input" class="input input--short" maxlength="2" placeholder="Custom" aria-label="Custom delimiter" />
+            <button type="button" id="update-delimiter-btn" class="btn btn-primary">Update</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <div class="field-row">
+            <span class="label">Suggestions</span>
+            <button type="button" class="toggle" id="suggestions-toggle" role="switch" aria-checked="false">OFF</button>
+          </div>
+          <div class="slider-row">
+            <label class="label label--inline" for="opacity-slider">Opacity</label>
+            <input type="range" id="opacity-slider" class="slider" min="0" max="1" value="0.75" step="0.05" aria-label="Suggestion box opacity" />
+          </div>
+        </div>
+
+        <div class="field">
+          <span class="label">Theme</span>
+          <div class="delimiter-row">
+            <button type="button" class="chip theme-chip" data-theme="light" aria-pressed="true">Light</button>
+            <button type="button" class="chip theme-chip" data-theme="dark" aria-pressed="false">Dark</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="panel-dictionary" class="tab-panel" role="tabpanel" aria-labelledby="tab-dictionary" hidden>
+        <div class="panel-block">
+          <h2 class="block-title">Keywords</h2>
+          <div class="field">
+            <input type="text" id="dictionary-filter" class="input" placeholder="Search…" aria-label="Filter dictionary" />
+          </div>
+          <div class="field-row field-row--actions">
+            <button type="button" id="add-entry-btn" class="btn btn-secondary">Add keyword</button>
+            <button type="button" id="update-dictionary-btn" class="btn btn-primary">Update</button>
+          </div>
+          <div class="dictionary-list" id="dictionary-container" role="list"></div>
+        </div>
+
+        <div class="panel-block">
+          <h2 class="block-title">Backup</h2>
+          <div class="backup-actions">
+            <button type="button" id="export-settings-btn" class="btn btn-secondary">Export</button>
+            <button type="button" id="import-settings-btn" class="btn btn-secondary">Import</button>
+            <button type="button" id="reset-defaults-btn" class="btn btn-secondary">Reset</button>
+          </div>
+          <input type="file" id="import-file-input" accept=".json,application/json" hidden />
+          <div class="backup-status" id="backup-status" aria-live="polite"></div>
+        </div>
+      </section>
+    </main>
+
     <script src="popup.js"></script>
   </body>
 </html>

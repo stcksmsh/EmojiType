@@ -1,252 +1,352 @@
-// Sample whitelist and blacklist arrays
-var whitelistValue;
-var blacklistValue;
-var whitelistState;
-var blacklistState;
-var delimiter;
+var whitelistValue = [];
+var blacklistValue = [];
+var whitelistState = false;
+var blacklistState = false;
+var delimiter = ":";
 var dictionary = {};
-var suggestionsOn;
-var suggestionsOpacity;
+var suggestionsOn = false;
+var suggestionsOpacity = 0.75;
+var currentTabUrl = null;
 
-// Function to update whitelist container
-function initWhitelist() {
-  var container = document.getElementById("whitelist-container");
-  container.innerHTML = "";
-  whitelistValue.forEach(function (item) {
-    var div = document.createElement("div");
-    div.className = "list-element";
-    div.innerText = item;
-    container.appendChild(div);
-  });
-  /// Add an empty element if the whitelist is empty
-  if (whitelistValue.length === 0) {
-    var div = document.createElement("div");
-    div.className = "list-element";
-    div.innerText = "";
-    container.appendChild(div);
+function switchTab(tabId) {
+  var panels = document.querySelectorAll(".tab-panel");
+  var tabs = document.querySelectorAll(".tab");
+  for (var i = 0; i < panels.length; i++) {
+    panels[i].classList.remove("active");
+    panels[i].hidden = true;
   }
+  for (var j = 0; j < tabs.length; j++) {
+    tabs[j].setAttribute("aria-selected", "false");
+  }
+  var panel = document.getElementById("panel-" + tabId);
+  var tab = document.getElementById("tab-" + tabId);
+  if (panel) {
+    panel.classList.add("active");
+    panel.hidden = false;
+  }
+  if (tab) tab.setAttribute("aria-selected", "true");
 }
 
-// Function to update blacklist container
+function initWhitelist() {
+  var ta = document.getElementById("whitelist-textarea");
+  if (ta) ta.value = (whitelistValue || []).join("\n");
+}
+
 function initBlacklist() {
-  var container = document.getElementById("blacklist-container");
-  container.innerHTML = "";
-  blacklistValue.forEach(function (item) {
-    var div = document.createElement("div");
-    div.className = "list-element";
-    div.innerText = item;
-    container.appendChild(div);
-  });
-  /// Add an empty element if the blacklist is empty
-  if (blacklistValue.length === 0) {
-    var div = document.createElement("div");
-    div.className = "list-element";
-    div.innerText = "";
-    container.appendChild(div);
-  }
+  var ta = document.getElementById("blacklist-textarea");
+  if (ta) ta.value = (blacklistValue || []).join("\n");
 }
 
 function initDelimiter() {
-  var container = document.getElementById("delimiter-container");
-  container.innerHTML = "";
-  container.innerText = delimiter;
-}
-
-// Function to update dictionary
-function initDictionary() {
-  var container = document.getElementById("dictionary-container");
-  container.innerHTML = "";
-  for (var key in dictionary) {
-    var pairDiv = document.createElement("div");
-    pairDiv.className = "dictionary-element";
-
-    var keyDiv = document.createElement("div");
-    keyDiv.className = "dictionary-key";
-    keyDiv.innerHTML = key;
-    pairDiv.appendChild(keyDiv);
-
-    var valueDiv = document.createElement("div");
-    valueDiv.className = "dictionary-value";
-    valueDiv.innerHTML = dictionary[key];
-    pairDiv.appendChild(valueDiv);
-
-    var deleteButton = document.createElement("button");
-    deleteButton.innerHTML = "X";
-    deleteButton.className = "dictionary-delete";
-    deleteButton.addEventListener("click", deleteItem);
-    pairDiv.appendChild(deleteButton);
-
-    keyDiv.contentEditable = true;
-    valueDiv.contentEditable = true;
-
-    container.appendChild(pairDiv);
+  var input = document.getElementById("delimiter-input");
+  var chips = document.querySelectorAll(".chip[data-delim]");
+  if (input) {
+    input.value = "";
+    input.placeholder = delimiter || ":";
+  }
+  for (var i = 0; i < chips.length; i++) {
+    var chip = chips[i];
+    chip.setAttribute("aria-pressed", chip.getAttribute("data-delim") === delimiter);
   }
 }
 
-// Function to toggle whitelist
+function initDictionary() {
+  var container = document.getElementById("dictionary-container");
+  if (!container) return;
+  container.innerHTML = "";
+  for (var key in dictionary) {
+    appendDictionaryRow(container, key, dictionary[key]);
+  }
+}
+
+function appendDictionaryRow(container, key, value) {
+  var row = document.createElement("div");
+  row.className = "dictionary-element";
+  row.setAttribute("role", "listitem");
+
+  var keyInput = document.createElement("input");
+  keyInput.type = "text";
+  keyInput.className = "dictionary-key";
+  keyInput.value = key;
+  keyInput.placeholder = "keyword";
+  keyInput.setAttribute("data-original-key", key);
+
+  var valueInput = document.createElement("input");
+  valueInput.type = "text";
+  valueInput.className = "dictionary-value";
+  valueInput.value = value;
+  valueInput.placeholder = "emoji";
+
+  var deleteBtn = document.createElement("button");
+  deleteBtn.type = "button";
+  deleteBtn.className = "dictionary-delete";
+  deleteBtn.textContent = "×";
+  deleteBtn.addEventListener("click", function () {
+    row.remove();
+    collectAndSendDictionary();
+  });
+
+  keyInput.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      addNewDictionaryRow(row);
+    }
+  });
+  valueInput.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      addNewDictionaryRow(row);
+    }
+  });
+
+  row.appendChild(keyInput);
+  row.appendChild(valueInput);
+  row.appendChild(deleteBtn);
+  container.appendChild(row);
+}
+
+function addNewDictionaryRow(afterRow) {
+  var container = document.getElementById("dictionary-container");
+  if (!container) return;
+  var row = document.createElement("div");
+  row.className = "dictionary-element";
+  row.setAttribute("role", "listitem");
+  var keyInput = document.createElement("input");
+  keyInput.type = "text";
+  keyInput.className = "dictionary-key";
+  keyInput.value = "";
+  keyInput.placeholder = "keyword";
+  var valueInput = document.createElement("input");
+  valueInput.type = "text";
+  valueInput.className = "dictionary-value";
+  valueInput.value = "";
+  valueInput.placeholder = "emoji";
+  var deleteBtn = document.createElement("button");
+  deleteBtn.type = "button";
+  deleteBtn.className = "dictionary-delete";
+  deleteBtn.textContent = "×";
+  deleteBtn.addEventListener("click", function () {
+    row.remove();
+    collectAndSendDictionary();
+  });
+  keyInput.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      addNewDictionaryRow(row);
+    }
+  });
+  valueInput.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      addNewDictionaryRow(row);
+    }
+  });
+  row.appendChild(keyInput);
+  row.appendChild(valueInput);
+  row.appendChild(deleteBtn);
+  if (afterRow && afterRow.nextSibling) {
+    container.insertBefore(row, afterRow.nextSibling);
+  } else {
+    container.appendChild(row);
+  }
+  keyInput.focus();
+}
+
+function collectAndSendDictionary() {
+  var container = document.getElementById("dictionary-container");
+  if (!container) return;
+  var rows = container.querySelectorAll(".dictionary-element:not(.filter-hidden)");
+  var items = {};
+  for (var i = 0; i < rows.length; i++) {
+    var keyEl = rows[i].querySelector(".dictionary-key");
+    var valEl = rows[i].querySelector(".dictionary-value");
+    if (!keyEl || !valEl) continue;
+    var k = keyEl.value.trim();
+    var v = valEl.value.trim();
+    if (k === "" && v === "") continue;
+    if (k !== "") items[k] = v || " ";
+  }
+  dictionary = items;
+  chrome.runtime.sendMessage({ action: "set", dictionary: items });
+}
+
+function updateDictionaryFromDOM() {
+  var container = document.getElementById("dictionary-container");
+  if (!container) return;
+  var rows = container.querySelectorAll(".dictionary-element:not(.filter-hidden)");
+  var items = {};
+  for (var i = 0; i < rows.length; i++) {
+    var keyEl = rows[i].querySelector(".dictionary-key");
+    var valEl = rows[i].querySelector(".dictionary-value");
+    if (!keyEl || !valEl) continue;
+    var k = keyEl.value.trim();
+    var v = valEl.value.trim();
+    if (k === "" && v === "") continue;
+    if (k !== "") items[k] = v || " ";
+  }
+  dictionary = items;
+  chrome.runtime.sendMessage({ action: "set", dictionary: items });
+}
+
+function filterDictionary() {
+  var q = (document.getElementById("dictionary-filter").value || "").trim().toLowerCase();
+  var rows = document.querySelectorAll("#dictionary-container .dictionary-element");
+  for (var i = 0; i < rows.length; i++) {
+    var row = rows[i];
+    var keyEl = row.querySelector(".dictionary-key");
+    var valEl = row.querySelector(".dictionary-value");
+    var key = (keyEl && keyEl.value) || "";
+    var val = (valEl && valEl.value) || "";
+    var match = !q || key.toLowerCase().indexOf(q) !== -1 || val.indexOf(q) !== -1;
+    row.classList.toggle("filter-hidden", !match);
+  }
+}
+
 function toggleWhitelist() {
   whitelistState = !whitelistState;
-  var whitelistToggle = document.getElementById("whitelist-toggle");
-  whitelistToggle.classList.toggle("active", whitelistState);
-  whitelistToggle.innerText = whitelistState ? "ON" : "OFF";
+  var el = document.getElementById("whitelist-toggle");
+  el.textContent = whitelistState ? "ON" : "OFF";
+  el.classList.toggle("active", whitelistState);
+  el.setAttribute("aria-checked", whitelistState);
   chrome.runtime.sendMessage({
     action: "set",
     whitelist: { state: whitelistState, value: whitelistValue },
   });
+  updateCurrentSiteStatus();
 }
 
-// Function to toggle blacklist
 function toggleBlacklist() {
   blacklistState = !blacklistState;
-  var blacklistToggle = document.getElementById("blacklist-toggle");
-  blacklistToggle.classList.toggle("active", blacklistState);
-  blacklistToggle.innerText = blacklistState ? "ON" : "OFF";
+  var el = document.getElementById("blacklist-toggle");
+  el.textContent = blacklistState ? "ON" : "OFF";
+  el.classList.toggle("active", blacklistState);
+  el.setAttribute("aria-checked", blacklistState);
   chrome.runtime.sendMessage({
     action: "set",
     blacklist: { state: blacklistState, value: blacklistValue },
   });
+  updateCurrentSiteStatus();
 }
 
-// Function to toggle suggestions
 function toggleSuggestions() {
   suggestionsOn = !suggestionsOn;
-  var suggestionsToggle = document.getElementById("suggestions-toggle");
-  suggestionsToggle.classList.toggle("active", suggestionsOn);
-  suggestionsToggle.innerText = suggestionsOn ? "ON" : "OFF";
+  var el = document.getElementById("suggestions-toggle");
+  el.textContent = suggestionsOn ? "ON" : "OFF";
+  el.classList.toggle("active", suggestionsOn);
+  el.setAttribute("aria-checked", suggestionsOn);
   chrome.runtime.sendMessage({
     action: "set",
     suggestions: { state: suggestionsOn, opacity: suggestionsOpacity },
   });
 }
 
-// Function to update whitelist items
 function updateWhitelistItems() {
-  // Get the whitelist container
-  var container = document.getElementById("whitelist-container");
-  // Get the innerText of the container and split it by '\n'
-  let divs = container.getElementsByTagName("div");
-  whitelistValue = [];
-  for (var i = 0; i < divs.length; i++) {
-    if (divs[i].innerText === "") {
-      continue;
-    }
-    whitelistValue.push(divs[i].innerText);
-  }
-  // Send message to background.js to update the whitelist
+  var ta = document.getElementById("whitelist-textarea");
+  if (!ta) return;
+  whitelistValue = ta.value
+    .split("\n")
+    .map(function (s) { return s.trim(); })
+    .filter(Boolean);
   chrome.runtime.sendMessage({
     action: "set",
     whitelist: { state: whitelistState, value: whitelistValue },
   });
+  updateCurrentSiteStatus();
 }
 
-// Function to update blacklist items
 function updateBlacklistItems() {
-  // Get the blacklist container
-  var container = document.getElementById("blacklist-container");
-  // Get the innerText of the container and split it by '\n'
-  let divs = container.getElementsByTagName("div");
-  blacklistValue = [];
-  for (var i = 0; i < divs.length; i++) {
-    if (divs[i].innerText === "") {
-      continue;
-    }
-    blacklistValue.push(divs[i].innerText);
-  }
-  // Send message to background.js to update the blacklist
+  var ta = document.getElementById("blacklist-textarea");
+  if (!ta) return;
+  blacklistValue = ta.value
+    .split("\n")
+    .map(function (s) { return s.trim(); })
+    .filter(Boolean);
   chrome.runtime.sendMessage({
     action: "set",
     blacklist: { state: blacklistState, value: blacklistValue },
   });
+  updateCurrentSiteStatus();
 }
 
 function updateDelimiter() {
-  // Get the delimiter container
-  var container = document.getElementById("delimiter-container");
-  // Get the div inside the container
-  // var div = container.children[0];
-  // Get the innerText of the div
-  delimiter = container.innerText;
-  // Send message to background.js to update the delimiter
+  var input = document.getElementById("delimiter-input");
+  var chips = document.querySelectorAll(".chip[data-delim]");
+  var val = (input && input.value.trim()) || "";
+  if (val.length === 0) {
+    var chipVal = "";
+    for (var i = 0; i < chips.length; i++) {
+      if (chips[i].getAttribute("aria-pressed") === "true") {
+        chipVal = chips[i].getAttribute("data-delim") || "";
+        break;
+      }
+    }
+    val = chipVal || delimiter || ":";
+  }
+  if (val.length > 2) val = val.slice(0, 2);
+  delimiter = val || ":";
+  if (input) {
+    input.value = "";
+    input.placeholder = delimiter;
+  }
+  for (var j = 0; j < chips.length; j++) {
+    var c = chips[j];
+    c.setAttribute("aria-pressed", c.getAttribute("data-delim") === delimiter);
+  }
   chrome.runtime.sendMessage({ action: "set", delim: delimiter });
+  updateShortcutHint();
 }
 
-function updateSuggestionsOpacity(event) {
-  suggestionsOpacity = event.target.value;
+function updateSuggestionsOpacity(e) {
+  suggestionsOpacity = parseFloat(e.target.value, 10);
   chrome.runtime.sendMessage({
     action: "set",
     suggestions: { state: suggestionsOn, opacity: suggestionsOpacity },
   });
 }
 
-function deleteItem(event) {
-  var button = event.target || event.sourceElement;
-  var pair = button.parentElement;
-  delete dictionary[pair.children[0].innerHTML]; // remove the element
-  pair.remove();
-  chrome.runtime.sendMessage({ action: "set", dictionary: dictionary });
+function updateShortcutHint() {
+  var el = document.getElementById("shortcut-hint");
+  if (!el) return;
+  var d = delimiter || ":";
+  el.textContent = "Type " + d + "keyword" + d + " or " + d + "keyword + Tab";
 }
 
-// Function to update dictionary items
-function updateDictionaryItems() {
-  // Get the dictionary container
-  var container = document.getElementById("dictionary-container");
-  // get all the divs inside the container
-  var elements = container.getElementsByClassName("dictionary-element");
-  // create an empty object to store the items
-  var items = {};
-  // iterate over the divs
-  for (var i = 0; i < elements.length; i++) {
-    // split the innerText of the div by ' - ' and push it to the items object
-    var key = elements[i].children[0].innerHTML;
-    var value = elements[i].children[1].innerHTML;
-    if (key === "" || value === "") {
-      elements[i].remove(); // remove the element
-      i--; // decrement the counter (since we removed an element, the next element will take its place, so we need to check the current index again)
-      continue;
-    }
-    items[key] = value;
-  }
-  // Send message to background.js to update the dictionary
-  chrome.runtime.sendMessage({ action: "set", dictionary: items });
+function setBackupStatus(message, isError) {
+  var el = document.getElementById("backup-status");
+  if (!el) return;
+  el.textContent = message;
+  el.className = "backup-status " + (isError ? "error" : "success");
+  setTimeout(function () {
+    el.textContent = "";
+    el.className = "backup-status";
+  }, 4000);
 }
 
 function exportSettings() {
   (async function () {
-    var whitelist = await chrome.runtime.sendMessage({
-      action: "get",
-      whitelist: true,
-    });
-    var blacklist = await chrome.runtime.sendMessage({
-      action: "get",
-      blacklist: true,
-    });
-    var delim = await chrome.runtime.sendMessage({
-      action: "get",
-      delim: true,
-    });
-    var dictionary = await chrome.runtime.sendMessage({
-      action: "get",
-      dictionary: true,
-    });
-    var suggestions = await chrome.runtime.sendMessage({
-      action: "get",
-      suggestions: true,
-    });
-    var data = {
-      whitelist: whitelist,
-      blacklist: blacklist,
-      delim: delim,
-      dictionary: dictionary,
-      suggestions: suggestions,
-    };
-    var blob = new Blob([JSON.stringify(data, null, 2)], {
-      type: "application/json",
-    });
-    var a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "emojitype-settings.json";
-    a.click();
-    URL.revokeObjectURL(a.href);
+    try {
+      var whitelist = await chrome.runtime.sendMessage({ action: "get", whitelist: true });
+      var blacklist = await chrome.runtime.sendMessage({ action: "get", blacklist: true });
+      var delim = await chrome.runtime.sendMessage({ action: "get", delim: true });
+      var dict = await chrome.runtime.sendMessage({ action: "get", dictionary: true });
+      var suggestions = await chrome.runtime.sendMessage({ action: "get", suggestions: true });
+      var data = {
+        whitelist: whitelist,
+        blacklist: blacklist,
+        delim: delim,
+        dictionary: dict,
+        suggestions: suggestions,
+      };
+      var blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+      var a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = "emojitype-settings.json";
+      a.click();
+      URL.revokeObjectURL(a.href);
+      setBackupStatus("Settings exported.");
+    } catch (err) {
+      setBackupStatus("Export failed.", true);
+    }
   })();
 }
 
@@ -262,199 +362,264 @@ function onImportFileChange(event) {
     try {
       var data = JSON.parse(e.target.result);
       if (!data || typeof data.dictionary !== "object") {
-        alert("Invalid settings file: missing dictionary");
+        setBackupStatus("Invalid file: missing dictionary.", true);
+        event.target.value = "";
         return;
       }
       (async function () {
-        if (data.whitelist != null) {
-          await chrome.runtime.sendMessage({
-            action: "set",
-            whitelist: {
-              state:
-                data.whitelist.state === true || data.whitelist.state === "on",
-              value: Array.isArray(data.whitelist.value)
-                ? data.whitelist.value
-                : [],
-            },
-          });
+        try {
+          if (data.whitelist != null) {
+            await chrome.runtime.sendMessage({
+              action: "set",
+              whitelist: {
+                state: data.whitelist.state === true || data.whitelist.state === "on",
+                value: Array.isArray(data.whitelist.value) ? data.whitelist.value : [],
+              },
+            });
+          }
+          if (data.blacklist != null) {
+            await chrome.runtime.sendMessage({
+              action: "set",
+              blacklist: {
+                state: data.blacklist.state === true || data.blacklist.state === "on",
+                value: Array.isArray(data.blacklist.value) ? data.blacklist.value : [],
+              },
+            });
+          }
+          if (data.delim != null) {
+            await chrome.runtime.sendMessage({ action: "set", delim: String(data.delim) });
+          }
+          if (data.dictionary != null) {
+            await chrome.runtime.sendMessage({ action: "set", dictionary: data.dictionary });
+          }
+          if (data.suggestions != null) {
+            await chrome.runtime.sendMessage({
+              action: "set",
+              suggestions: {
+                state: data.suggestions.state === true || data.suggestions.state === "on",
+                opacity: typeof data.suggestions.opacity === "number" ? data.suggestions.opacity : 0.75,
+              },
+            });
+          }
+          await init();
+          setBackupStatus("Settings imported.");
+        } catch (err) {
+          setBackupStatus("Import failed.", true);
         }
-        if (data.blacklist != null) {
-          await chrome.runtime.sendMessage({
-            action: "set",
-            blacklist: {
-              state:
-                data.blacklist.state === true || data.blacklist.state === "on",
-              value: Array.isArray(data.blacklist.value)
-                ? data.blacklist.value
-                : [],
-            },
-          });
-        }
-        if (data.delim != null) {
-          await chrome.runtime.sendMessage({
-            action: "set",
-            delim: String(data.delim),
-          });
-        }
-        if (data.dictionary != null) {
-          await chrome.runtime.sendMessage({
-            action: "set",
-            dictionary: data.dictionary,
-          });
-        }
-        if (data.suggestions != null) {
-          await chrome.runtime.sendMessage({
-            action: "set",
-            suggestions: {
-              state:
-                data.suggestions.state === true ||
-                data.suggestions.state === "on",
-              opacity:
-                typeof data.suggestions.opacity === "number"
-                  ? data.suggestions.opacity
-                  : 0.75,
-            },
-          });
-        }
-        init();
+        event.target.value = "";
       })();
     } catch (err) {
-      alert("Invalid JSON: " + (err.message || "parse error"));
+      setBackupStatus("Invalid JSON: " + (err.message || "parse error"), true);
+      event.target.value = "";
     }
-    event.target.value = "";
   };
   reader.readAsText(file);
 }
 
-function addNewDictionaryItem(event) {
-  if (event.key === "Enter") {
-    event.preventDefault(); // prevent the default action, make sure the newline character is not added
+function resetToDefaults() {
+  chrome.runtime.sendMessage({ action: "resetDefaults" }, function () {
+    init();
+    setBackupStatus("Reset to defaults done.");
+  });
+}
 
-    var sourceDiv = event.target || event.srcElement; // get the source of the event, which is either a dictionary-key or dictionary-value
-    var parentElement = sourceDiv.parentElement; // get the parent element of the source
-    var dictionaryContainer = document.getElementById("dictionary-container"); // get the dictionary container
-
-    var newPair = document.createElement("div"); // create a new pair
-    newPair.className = "dictionary-element"; // add the class name
-
-    var newKey = document.createElement("div"); // create a new key div
-    newKey.className = "dictionary-key"; // add the class name
-    newKey.contentEditable = true; // make it content editable
-    newKey.innerHTML = ""; // set the innerHTML to empty
-
-    var newValue = document.createElement("div"); // create a new value div
-    newValue.className = "dictionary-value"; // add the class name
-    newValue.contentEditable = true; // make it content editable
-    newValue.innerHTML = ""; // set the innerHTML to empty
-
-    var deleteButton = document.createElement("button"); // create a delete button
-    deleteButton.innerHTML = "X"; // set the innerHTML to X
-    deleteButton.className = "dictionary-delete"; // add the class name
-    deleteButton.addEventListener("click", deleteItem); // add the event listener
-
-    newPair.appendChild(newKey); // append the key to the pair
-    newPair.appendChild(newValue); // append the value to the pair
-    newPair.appendChild(deleteButton); // append the delete button to the pair
-
-    dictionaryContainer.insertBefore(newPair, parentElement.nextSibling); // insert the new pair after the source
+function updateCurrentSiteStatus() {
+  var statusEl = document.getElementById("status-value");
+  var actionsEl = document.getElementById("status-actions");
+  if (!statusEl || !actionsEl) return;
+  if (currentTabUrl == null || currentTabUrl === "") {
+    statusEl.textContent = "—";
+    statusEl.className = "status-value";
+    actionsEl.innerHTML = "";
+    return;
   }
+  chrome.runtime.sendMessage({ action: "get", urlStatus: currentTabUrl }, function (res) {
+    if (!res || res.active === undefined) {
+      statusEl.textContent = "—";
+      statusEl.className = "status-value";
+      actionsEl.innerHTML = "";
+      return;
+    }
+    if (res.active) {
+      statusEl.textContent = "Active";
+      statusEl.className = "status-value active";
+    } else {
+      statusEl.textContent = "Off";
+      statusEl.className = "status-value off";
+    }
+    try {
+      var origin = new URL(currentTabUrl).origin;
+      var pattern = origin.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + ".*";
+      actionsEl.innerHTML = "";
+      if (res.active) {
+        var btnDisable = document.createElement("button");
+        btnDisable.type = "button";
+        btnDisable.className = "btn btn-secondary";
+        btnDisable.textContent = "Disable on this site";
+        btnDisable.addEventListener("click", function () {
+          blacklistValue = blacklistValue || [];
+          if (blacklistValue.indexOf(pattern) === -1) blacklistValue.push(pattern);
+          document.getElementById("blacklist-textarea").value = blacklistValue.join("\n");
+          chrome.runtime.sendMessage({
+            action: "set",
+            blacklist: { state: true, value: blacklistValue },
+          });
+          blacklistState = true;
+          document.getElementById("blacklist-toggle").textContent = "ON";
+          document.getElementById("blacklist-toggle").classList.add("active");
+          document.getElementById("blacklist-toggle").setAttribute("aria-checked", "true");
+          updateCurrentSiteStatus();
+        });
+        actionsEl.appendChild(btnDisable);
+      } else {
+        var btnEnable = document.createElement("button");
+        btnEnable.type = "button";
+        btnEnable.className = "btn btn-secondary";
+        btnEnable.textContent = "Enable on this site";
+        btnEnable.addEventListener("click", function () {
+          whitelistValue = whitelistValue || [];
+          if (whitelistValue.indexOf(pattern) === -1) whitelistValue.push(pattern);
+          document.getElementById("whitelist-textarea").value = whitelistValue.join("\n");
+          chrome.runtime.sendMessage({
+            action: "set",
+            whitelist: { state: true, value: whitelistValue },
+          });
+          whitelistState = true;
+          document.getElementById("whitelist-toggle").textContent = "ON";
+          document.getElementById("whitelist-toggle").classList.add("active");
+          document.getElementById("whitelist-toggle").setAttribute("aria-checked", "true");
+          updateCurrentSiteStatus();
+        });
+        actionsEl.appendChild(btnEnable);
+      }
+    } catch (_) {
+      actionsEl.innerHTML = "";
+    }
+  });
 }
 
 async function init() {
-  whitelistValue = await chrome.runtime.sendMessage({
-    action: "get",
-    whitelist: true,
-  });
-  blacklistValue = await chrome.runtime.sendMessage({
-    action: "get",
-    blacklist: true,
-  });
-  whitelistState =
-    whitelistValue.state === true || whitelistValue.state === "on";
-  whitelistValue = whitelistValue.value;
-  blacklistState =
-    blacklistValue.state === true || blacklistValue.state === "on";
-  blacklistValue = blacklistValue.value;
-  document
-    .getElementById("whitelist-toggle")
-    .classList.toggle("active", whitelistState);
-  document.getElementById("whitelist-toggle").innerText = whitelistState
-    ? "ON"
-    : "OFF";
-  document
-    .getElementById("blacklist-toggle")
-    .classList.toggle("active", blacklistState);
-  document.getElementById("blacklist-toggle").innerText = blacklistState
-    ? "ON"
-    : "OFF";
+  var whitelistRes = await chrome.runtime.sendMessage({ action: "get", whitelist: true });
+  var blacklistRes = await chrome.runtime.sendMessage({ action: "get", blacklist: true });
+  whitelistState = whitelistRes.state === true || whitelistRes.state === "on";
+  whitelistValue = whitelistRes.value || [];
+  blacklistState = blacklistRes.state === true || blacklistRes.state === "on";
+  blacklistValue = blacklistRes.value || [];
+
+  var wToggle = document.getElementById("whitelist-toggle");
+  if (wToggle) {
+    wToggle.textContent = whitelistState ? "ON" : "OFF";
+    wToggle.classList.toggle("active", whitelistState);
+    wToggle.setAttribute("aria-checked", whitelistState);
+  }
+  var bToggle = document.getElementById("blacklist-toggle");
+  if (bToggle) {
+    bToggle.textContent = blacklistState ? "ON" : "OFF";
+    bToggle.classList.toggle("active", blacklistState);
+    bToggle.setAttribute("aria-checked", blacklistState);
+  }
+
   delimiter = await chrome.runtime.sendMessage({ action: "get", delim: true });
-  dictionary = await chrome.runtime.sendMessage({
-    action: "get",
-    dictionary: true,
-  });
-  // Initial update
+  dictionary = await chrome.runtime.sendMessage({ action: "get", dictionary: true }) || {};
+  var suggestionsRes = await chrome.runtime.sendMessage({ action: "get", suggestions: true });
+  suggestionsOn = suggestionsRes.state === true || suggestionsRes.state === "on";
+  suggestionsOpacity = suggestionsRes.opacity;
+
   initWhitelist();
   initBlacklist();
   initDelimiter();
   initDictionary();
+  updateShortcutHint();
 
-  var suggestions = await chrome.runtime.sendMessage({
-    action: "get",
-    suggestions: true,
+  var sToggle = document.getElementById("suggestions-toggle");
+  if (sToggle) {
+    sToggle.textContent = suggestionsOn ? "ON" : "OFF";
+    sToggle.classList.toggle("active", suggestionsOn);
+    sToggle.setAttribute("aria-checked", suggestionsOn);
+  }
+  var opacitySlider = document.getElementById("opacity-slider");
+  if (opacitySlider) opacitySlider.value = suggestionsOpacity;
+
+  try {
+    var tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+    currentTabUrl = (tabs[0] && tabs[0].url) || null;
+  } catch (_) {
+    currentTabUrl = null;
+  }
+  updateCurrentSiteStatus();
+
+  var stored = await chrome.storage.local.get("popupTheme");
+  var theme = stored.popupTheme || "light";
+  document.body.setAttribute("data-theme", theme);
+  document.querySelectorAll(".theme-chip").forEach(function (c) {
+    c.setAttribute("aria-pressed", c.getAttribute("data-theme") === theme);
   });
-  suggestionsOn = suggestions.state === true || suggestions.state === "on";
-  suggestionsOpacity = suggestions.opacity;
-  document
-    .getElementById("suggestions-toggle")
-    .classList.toggle("active", suggestionsOn);
-  document.getElementById("suggestions-toggle").innerText = suggestionsOn
-    ? "ON"
-    : "OFF";
-  document.getElementById("opacity-slider").value = suggestionsOpacity;
-
-  // Add event listeners after the fact
-  document
-    .getElementById("whitelist-toggle")
-    .addEventListener("click", toggleWhitelist);
-  document
-    .getElementById("blacklist-toggle")
-    .addEventListener("click", toggleBlacklist);
-  document
-    .getElementById("update-whitelist-btn")
-    .addEventListener("click", updateWhitelistItems);
-  document
-    .getElementById("update-blacklist-btn")
-    .addEventListener("click", updateBlacklistItems);
-
-  document
-    .getElementById("update-delimiter-btn")
-    .addEventListener("click", updateDelimiter);
-
-  document
-    .getElementById("update-dictionary-btn")
-    .addEventListener("click", updateDictionaryItems);
-
-  document
-    .getElementById("dictionary-container")
-    .addEventListener("keydown", addNewDictionaryItem);
-
-  document
-    .getElementById("suggestions-toggle")
-    .addEventListener("click", toggleSuggestions);
-
-  document
-    .getElementById("opacity-slider")
-    .addEventListener("input", updateSuggestionsOpacity);
-
-  document
-    .getElementById("export-settings-btn")
-    .addEventListener("click", exportSettings);
-  document
-    .getElementById("import-settings-btn")
-    .addEventListener("click", importSettings);
-  document
-    .getElementById("import-file-input")
-    .addEventListener("change", onImportFileChange);
 }
 
-document.addEventListener("DOMContentLoaded", init, false);
+function setupListeners() {
+  document.querySelectorAll(".tab").forEach(function (tab) {
+    tab.addEventListener("click", function () {
+      switchTab(tab.getAttribute("data-tab"));
+    });
+  });
+
+  document.querySelectorAll(".chip[data-delim]").forEach(function (chip) {
+    chip.addEventListener("click", function () {
+      var d = chip.getAttribute("data-delim");
+      document.querySelectorAll(".chip[data-delim]").forEach(function (c) {
+        c.setAttribute("aria-pressed", c.getAttribute("data-delim") === d);
+      });
+      var input = document.getElementById("delimiter-input");
+      if (input) {
+        input.value = "";
+        input.placeholder = d;
+      }
+      delimiter = d;
+      chrome.runtime.sendMessage({ action: "set", delim: delimiter });
+      updateShortcutHint();
+    });
+  });
+
+  document.getElementById("delimiter-input").addEventListener("change", updateDelimiter);
+  document.getElementById("delimiter-input").addEventListener("keydown", function (e) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      updateDelimiter();
+    }
+  });
+  document.getElementById("update-delimiter-btn").addEventListener("click", updateDelimiter);
+
+  document.getElementById("whitelist-toggle").addEventListener("click", toggleWhitelist);
+  document.getElementById("blacklist-toggle").addEventListener("click", toggleBlacklist);
+  document.getElementById("suggestions-toggle").addEventListener("click", toggleSuggestions);
+  document.getElementById("update-whitelist-btn").addEventListener("click", updateWhitelistItems);
+  document.getElementById("update-blacklist-btn").addEventListener("click", updateBlacklistItems);
+  document.getElementById("update-dictionary-btn").addEventListener("click", updateDictionaryFromDOM);
+  document.getElementById("add-entry-btn").addEventListener("click", function () {
+    var container = document.getElementById("dictionary-container");
+    if (container) addNewDictionaryRow(container.lastElementChild || null);
+  });
+  document.getElementById("opacity-slider").addEventListener("input", updateSuggestionsOpacity);
+  document.getElementById("dictionary-filter").addEventListener("input", filterDictionary);
+  document.getElementById("export-settings-btn").addEventListener("click", exportSettings);
+  document.getElementById("import-settings-btn").addEventListener("click", importSettings);
+  document.getElementById("import-file-input").addEventListener("change", onImportFileChange);
+  document.getElementById("reset-defaults-btn").addEventListener("click", resetToDefaults);
+
+  document.querySelectorAll(".theme-chip").forEach(function (chip) {
+    chip.addEventListener("click", function () {
+      var theme = chip.getAttribute("data-theme");
+      document.querySelectorAll(".theme-chip").forEach(function (c) {
+        c.setAttribute("aria-pressed", c.getAttribute("data-theme") === theme);
+      });
+      document.body.setAttribute("data-theme", theme);
+      chrome.storage.local.set({ popupTheme: theme });
+    });
+  });
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+  init().then(function () {
+    setupListeners();
+  });
+});

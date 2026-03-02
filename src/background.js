@@ -73,9 +73,48 @@ function setupMessageListener() {
           sendResponse(delim);
         } else if (request.suggestions !== undefined) {
           sendResponse({ state: suggestionsOn, opacity: suggestionsOpacity });
+        } else if (request.urlStatus !== undefined) {
+          var url = request.urlStatus;
+          var active =
+            IsUrlWhitelisted(url) && !IsUrlBlacklisted(url);
+          sendResponse({ active: active });
         } else {
           sendResponse("");
         }
+      } else if (request.action === "resetDefaults") {
+        (async function () {
+          var defaultDict = defaultDictFallback;
+          try {
+            var r = await fetch(
+              chrome.runtime.getURL("data/default-dictionary.json")
+            );
+            defaultDict = await r.json();
+          } catch (_) {}
+          DICT = defaultDict;
+          REVDICT = {};
+          for (var k in DICT) REVDICT[DICT[k]] = k;
+          whitelistOn = false;
+          whitelistValue = [];
+          blacklistOn = false;
+          blacklistValue = [];
+          delim = ":";
+          suggestionsOn = true;
+          suggestionsOpacity = 0.75;
+          chrome.storage.local.set({
+            dictionary: DICT,
+            whitelist: { state: false, value: [] },
+            blacklist: { state: false, value: [] },
+            delim: ":",
+            suggestions: { state: true, opacity: 0.75 },
+          });
+          notifyTabs({ action: "set", dictionary: DICT, delim: delim });
+          notifyTabs({
+            action: "set",
+            suggestions: { state: true, opacity: 0.75 },
+          });
+          sendResponse("success");
+        })();
+        return true;
       } else if (request.action === "set") {
         if (request.key !== undefined && request.value !== undefined) {
           DICT[request.key] = request.value;

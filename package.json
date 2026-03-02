@@ -1,6 +1,6 @@
 {
   "name": "emojitype",
-  "version": "2.7.0",
+  "version": "2.9",
   "description": "Type emojis in any text field by replacing :keyword: with emojis.",
   "private": true,
   "type": "module",
