@@ -220,7 +220,10 @@ function exportSettings() {
       action: "get",
       blacklist: true,
     });
-    var delim = await chrome.runtime.sendMessage({ action: "get", delim: true });
+    var delim = await chrome.runtime.sendMessage({
+      action: "get",
+      delim: true,
+    });
     var dictionary = await chrome.runtime.sendMessage({
       action: "get",
       dictionary: true,
@@ -267,8 +270,11 @@ function onImportFileChange(event) {
           await chrome.runtime.sendMessage({
             action: "set",
             whitelist: {
-              state: data.whitelist.state === true || data.whitelist.state === "on",
-              value: Array.isArray(data.whitelist.value) ? data.whitelist.value : [],
+              state:
+                data.whitelist.state === true || data.whitelist.state === "on",
+              value: Array.isArray(data.whitelist.value)
+                ? data.whitelist.value
+                : [],
             },
           });
         }
@@ -276,8 +282,11 @@ function onImportFileChange(event) {
           await chrome.runtime.sendMessage({
             action: "set",
             blacklist: {
-              state: data.blacklist.state === true || data.blacklist.state === "on",
-              value: Array.isArray(data.blacklist.value) ? data.blacklist.value : [],
+              state:
+                data.blacklist.state === true || data.blacklist.state === "on",
+              value: Array.isArray(data.blacklist.value)
+                ? data.blacklist.value
+                : [],
             },
           });
         }
@@ -297,7 +306,9 @@ function onImportFileChange(event) {
           await chrome.runtime.sendMessage({
             action: "set",
             suggestions: {
-              state: data.suggestions.state === true || data.suggestions.state === "on",
+              state:
+                data.suggestions.state === true ||
+                data.suggestions.state === "on",
               opacity:
                 typeof data.suggestions.opacity === "number"
                   ? data.suggestions.opacity
@@ -391,8 +402,7 @@ async function init() {
     action: "get",
     suggestions: true,
   });
-  suggestionsOn =
-    suggestions.state === true || suggestions.state === "on";
+  suggestionsOn = suggestions.state === true || suggestions.state === "on";
   suggestionsOpacity = suggestions.opacity;
   document
     .getElementById("suggestions-toggle")

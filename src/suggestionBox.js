@@ -68,13 +68,18 @@ function selectHighlighted() {
   var kw = currentSuggestionsList[currentHighlightedIndex];
   if (kw && DICT[kw] != null) {
     document.dispatchEvent(
-      new CustomEvent("emojitype-insert-suggestion", { detail: { keyword: kw } })
+      new CustomEvent("emojitype-insert-suggestion", {
+        detail: { keyword: kw },
+      })
     );
   }
 }
 
 window.__emojitypeSuggestionsKey = function (key) {
-  if (!window.__emojitypeSuggestionsVisible || currentSuggestionsList.length === 0)
+  if (
+    !window.__emojitypeSuggestionsVisible ||
+    currentSuggestionsList.length === 0
+  )
     return;
   if (key === "ArrowDown") {
     setHighlight(
@@ -137,7 +142,9 @@ function updateSuggestions(x, top, bottom, text) {
       var kw = e.currentTarget.dataset.keyword;
       if (kw && DICT[kw] != null) {
         document.dispatchEvent(
-          new CustomEvent("emojitype-insert-suggestion", { detail: { keyword: kw } })
+          new CustomEvent("emojitype-insert-suggestion", {
+            detail: { keyword: kw },
+          })
         );
       }
     };
