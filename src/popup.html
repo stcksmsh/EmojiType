@@ -1,56 +1,95 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Extension Popup</title>
-    <link rel="stylesheet" type="text/css" href="popup.css">
-</head>
-<body>
-    
+    <link rel="stylesheet" type="text/css" href="popup.css" />
+  </head>
+  <body>
     <div class="upper-section">
-        <div class = "list-section">
-            <h2>Website Whitelist</h2>
-            <label class="toggle-label" for="whitelist-toggle">Toggle Whitelist</label>
-            <div class="toggle-button" id="whitelist-toggle">OFF</div>
-            <br>
-            <div class="whitelist-container container" id="whitelist-container" contenteditable="true"></div>
-            <br>
-            <button id="update-whitelist-btn" class="update-button">Update</button>
-        </div>
-        <div class = "delimiter-section">
-            <h2>Delimiter</h2>
-            <br>
-            <div class="container delimiter-container" id="delimiter-container" contenteditable="true"></div>
-            <button id="update-delimiter-btn" class="update-button">Update</button>
-        </div>
-        <div class = "list-section">
-            <h2>Website Blacklist</h2>
-            <label class="toggle-label" for="blacklist-toggle">Toggle Blacklist</label>
-            <div class="toggle-button" id="blacklist-toggle">OFF</div>
-            <br>
-            <div class="blacklist-container container" id="blacklist-container" contenteditable="true"></div>
-            <br>
-            <button id="update-blacklist-btn" class="update-button">Update</button>
-        </div>
+      <div class="list-section">
+        <h2>Website Whitelist</h2>
+        <label class="toggle-label" for="whitelist-toggle"
+          >Toggle Whitelist</label
+        >
+        <div class="toggle-button" id="whitelist-toggle">OFF</div>
+        <br />
+        <div
+          class="whitelist-container container"
+          id="whitelist-container"
+          contenteditable="true"
+        ></div>
+        <br />
+        <button id="update-whitelist-btn" class="update-button">Update</button>
+      </div>
+      <div class="delimiter-section">
+        <h2>Delimiter</h2>
+        <br />
+        <div
+          class="container delimiter-container"
+          id="delimiter-container"
+          contenteditable="true"
+        ></div>
+        <button id="update-delimiter-btn" class="update-button">Update</button>
+      </div>
+      <div class="list-section">
+        <h2>Website Blacklist</h2>
+        <label class="toggle-label" for="blacklist-toggle"
+          >Toggle Blacklist</label
+        >
+        <div class="toggle-button" id="blacklist-toggle">OFF</div>
+        <br />
+        <div
+          class="blacklist-container container"
+          id="blacklist-container"
+          contenteditable="true"
+        ></div>
+        <br />
+        <button id="update-blacklist-btn" class="update-button">Update</button>
+      </div>
     </div>
     <div class="middle-section">
-        <div class="list-section">
-            <h2>Extension Dictionary</h2>
-            <div class="container dictionary-container" id="dictionary-container"></div>
-            <br>
-            <button id="update-dictionary-btn" class="update-button" style="margin-left:20px;">Update</button>
-        </div>
+      <div class="list-section">
+        <h2>Extension Dictionary</h2>
+        <div
+          class="container dictionary-container"
+          id="dictionary-container"
+        ></div>
+        <br />
+        <button
+          id="update-dictionary-btn"
+          class="update-button"
+          style="margin-left: 20px"
+        >
+          Update
+        </button>
+      </div>
     </div>
     <div class="lower-section">
-        <div class="list-section">
-                <h2>Suggestions</h2>
-                <div class="toggle-button" id="suggestions-toggle" style="align-self: center;">OFF</div>
-                <div>
-                    <input type="range" min="0" max="1" value="0.5" step="0.01" class="slider" id="opacity-slider" style="align-self: center;">
-                </div>
-            </div>
+      <div class="list-section">
+        <h2>Suggestions</h2>
+        <div
+          class="toggle-button"
+          id="suggestions-toggle"
+          style="align-self: center"
+        >
+          OFF
+        </div>
+        <div>
+          <input
+            type="range"
+            min="0"
+            max="1"
+            value="0.5"
+            step="0.01"
+            class="slider"
+            id="opacity-slider"
+            style="align-self: center"
+          />
+        </div>
+      </div>
     </div>
     <script src="popup.js"></script>
-</body>
+  </body>
 </html>

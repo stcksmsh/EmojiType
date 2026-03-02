@@ -1,6 +1,7 @@
 let floatingDiv = document.createElement("div");
 
-floatingDiv.style=' position: absolute;\
+floatingDiv.style =
+  " position: absolute;\
                     display: none; \
                     background-color: #dfdfdf; \
                     border: 1px solid black; \
@@ -13,119 +14,124 @@ floatingDiv.style=' position: absolute;\
                     max-height: 200px; \
                     overflow-y: auto; \
                     width: 200px; \
-                    box-shadow: 0px 0px 5px 0px black;';
-
+                    box-shadow: 0px 0px 5px 0px black;";
 
 document.body.appendChild(floatingDiv);
 
-DICT = {}
-REVDICT = {}
+DICT = {};
+REVDICT = {};
 
-let divX = 0, divY = 0;
+let divX = 0,
+  divY = 0;
 
 /// now get the dictionary from the background script, initially
-chrome.runtime.sendMessage({    
+chrome.runtime
+  .sendMessage({
     action: "get",
-    dictionary: true
-}).then(function (response) {
+    dictionary: true,
+  })
+  .then(function (response) {
     DICT = response;
     /// now initialise the revdictionary
     for (let key of Object.keys(DICT)) {
-        REVDICT[DICT[key]] = key;
+      REVDICT[DICT[key]] = key;
     }
-});
-
+  });
 
 var suggestionsOn = false;
 var suggestionsOpacity = 0.75;
 
-chrome.runtime.sendMessage({
+chrome.runtime
+  .sendMessage({
     action: "get",
-    suggestions: true
-}).then(function (response) {
+    suggestions: true,
+  })
+  .then(function (response) {
     suggestionsOn = response.state;
     suggestionsOpacity = response.opacity;
     updateSuggestionBox();
-});
+  });
 
 function clickedSuggestion(event) {
-    /// TODO: insert the suggestion into the text
-};
-
-function updateSuggestions(x, top, bottom, text) {
-    if(!suggestionsOn) {
-        floatingDiv.style.display = "none";
-        return null;
-    }
-    if(text == "") {
-        floatingDiv.style.display = "none";
-        return null;
-    }
-    floatingDiv.style.display = "flex";
-    for(let child = floatingDiv.lastChild; child; child = floatingDiv.lastChild) {
-        floatingDiv.removeChild(child);
-    }
-
-    /// now we need to add the suggestions to the floating div
-    /// we need to get the suggestions from the dictionary which are similar to the text
-    /// sort the suggestions by the similarity
-    /// add the suggestions to the floating div
-    var suggestions = [];
-    for (var key in DICT) {
-        if (key.startsWith(text)) {
-            suggestions.push(key);
-        }
-    }
-    
-    if(suggestions.length == 0) {
-        floatingDiv.style.display = "none";
-        return null;
-    }
-    
-    
-    suggestions.sort((a, b) => DICT[b] - DICT[a]);
-    for(var i = 0; i < suggestions.length; i++) {
-        var suggestion = suggestions[i];
-        var suggestionDiv = document.createElement("div");
-        suggestionDiv.style = "padding: 5px; cursor: pointer; display: flex; justify-content: space-between;";
-        suggestionDiv.onclick = function( event ) {
-            clickedSuggestion(event);
-        }
-
-        if(i > 0)suggestionDiv.style.borderTop = "1px solid black";
-
-        var suggestionText = document.createElement("p");
-        suggestionText.innerHTML = suggestion;
-        suggestionText.style = "margin: 0;";
-        suggestionDiv.appendChild(suggestionText);
-
-        var suggestionValue = document.createElement("p");
-        suggestionValue.innerHTML = DICT[suggestion];
-        suggestionValue.style = "margin: 0;";
-        suggestionDiv.appendChild(suggestionValue);
-
-        floatingDiv.appendChild(suggestionDiv);
-    }
-
-    
-    if(window.screen.availHeight - bottom < floatingDiv.clientHeight + 150) {
-        top -= floatingDiv.clientHeight;
-        floatingDiv.style.left = x + "px";
-        floatingDiv.style.top = top + "px";
-    }else{
-        floatingDiv.style.left = x + "px";
-        floatingDiv.style.top = bottom + "px";
-    }
-        
-    
-    return suggestions[0];
+  /// TODO: insert the suggestion into the text
 }
 
-function updateSuggestionBox(){
-    floatingDiv.style.opacity = suggestionsOpacity;
-    if(suggestionsOn){
-        floatingDiv.style.display = "flex";
-    }else{
-        floatingDiv.style.display = "none";
+function updateSuggestions(x, top, bottom, text) {
+  if (!suggestionsOn) {
+    floatingDiv.style.display = "none";
+    return null;
+  }
+  if (text == "") {
+    floatingDiv.style.display = "none";
+    return null;
+  }
+  floatingDiv.style.display = "flex";
+  for (
+    let child = floatingDiv.lastChild;
+    child;
+    child = floatingDiv.lastChild
+  ) {
+    floatingDiv.removeChild(child);
+  }
+
+  /// now we need to add the suggestions to the floating div
+  /// we need to get the suggestions from the dictionary which are similar to the text
+  /// sort the suggestions by the similarity
+  /// add the suggestions to the floating div
+  var suggestions = [];
+  for (var key in DICT) {
+    if (key.startsWith(text)) {
+      suggestions.push(key);
     }
+  }
+
+  if (suggestions.length == 0) {
+    floatingDiv.style.display = "none";
+    return null;
+  }
+
+  suggestions.sort((a, b) => DICT[b] - DICT[a]);
+  for (var i = 0; i < suggestions.length; i++) {
+    var suggestion = suggestions[i];
+    var suggestionDiv = document.createElement("div");
+    suggestionDiv.style =
+      "padding: 5px; cursor: pointer; display: flex; justify-content: space-between;";
+    suggestionDiv.onclick = function (event) {
+      clickedSuggestion(event);
+    };
+
+    if (i > 0) suggestionDiv.style.borderTop = "1px solid black";
+
+    var suggestionText = document.createElement("p");
+    suggestionText.innerHTML = suggestion;
+    suggestionText.style = "margin: 0;";
+    suggestionDiv.appendChild(suggestionText);
+
+    var suggestionValue = document.createElement("p");
+    suggestionValue.innerHTML = DICT[suggestion];
+    suggestionValue.style = "margin: 0;";
+    suggestionDiv.appendChild(suggestionValue);
+
+    floatingDiv.appendChild(suggestionDiv);
+  }
+
+  if (window.screen.availHeight - bottom < floatingDiv.clientHeight + 150) {
+    top -= floatingDiv.clientHeight;
+    floatingDiv.style.left = x + "px";
+    floatingDiv.style.top = top + "px";
+  } else {
+    floatingDiv.style.left = x + "px";
+    floatingDiv.style.top = bottom + "px";
+  }
+
+  return suggestions[0];
+}
+
+function updateSuggestionBox() {
+  floatingDiv.style.opacity = suggestionsOpacity;
+  if (suggestionsOn) {
+    floatingDiv.style.display = "flex";
+  } else {
+    floatingDiv.style.display = "none";
+  }
 }
