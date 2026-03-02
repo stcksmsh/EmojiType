@@ -31,8 +31,11 @@
             <span class="label">Whitelist</span>
             <button type="button" class="toggle" id="whitelist-toggle" role="switch" aria-checked="false">OFF</button>
           </div>
-          <textarea id="whitelist-textarea" class="textarea textarea--short" rows="2" placeholder="One URL pattern per line" spellcheck="false"></textarea>
-          <button type="button" id="update-whitelist-btn" class="btn btn-primary">Update</button>
+          <div class="pattern-list" id="whitelist-list"></div>
+          <div class="field-row field-row--list-actions">
+            <button type="button" id="whitelist-add-btn" class="btn btn-secondary">+ Add</button>
+          </div>
+          <div class="field-error" id="whitelist-error" aria-live="polite"></div>
         </div>
 
         <div class="field">
@@ -40,8 +43,11 @@
             <span class="label">Blacklist</span>
             <button type="button" class="toggle" id="blacklist-toggle" role="switch" aria-checked="false">OFF</button>
           </div>
-          <textarea id="blacklist-textarea" class="textarea textarea--short" rows="2" placeholder="One URL pattern per line" spellcheck="false"></textarea>
-          <button type="button" id="update-blacklist-btn" class="btn btn-primary">Update</button>
+          <div class="pattern-list" id="blacklist-list"></div>
+          <div class="field-row field-row--list-actions">
+            <button type="button" id="blacklist-add-btn" class="btn btn-secondary">+ Add</button>
+          </div>
+          <div class="field-error" id="blacklist-error" aria-live="polite"></div>
         </div>
       </section>
 
@@ -54,6 +60,7 @@
             <input type="text" id="delimiter-input" class="input input--short" maxlength="2" placeholder="Custom" aria-label="Custom delimiter" />
             <button type="button" id="update-delimiter-btn" class="btn btn-primary">Update</button>
           </div>
+          <p class="delimiter-preview" id="delimiter-preview" aria-live="polite">Preview: —</p>
         </div>
 
         <div class="field">
@@ -86,7 +93,13 @@
             <button type="button" id="add-entry-btn" class="btn btn-secondary">Add keyword</button>
             <button type="button" id="update-dictionary-btn" class="btn btn-primary">Update</button>
           </div>
-          <div class="dictionary-list" id="dictionary-container" role="list"></div>
+          <div class="dictionary-list-wrap">
+            <div class="dictionary-empty" id="dictionary-empty-state">
+              <p class="dictionary-empty-text">No keywords yet.</p>
+              <button type="button" id="dictionary-empty-add-btn" class="btn btn-primary">Add keyword</button>
+            </div>
+            <div class="dictionary-list" id="dictionary-container" role="list"></div>
+          </div>
         </div>
 
         <div class="panel-block">
@@ -98,6 +111,9 @@
           </div>
           <input type="file" id="import-file-input" accept=".json,application/json" hidden />
           <div class="backup-status" id="backup-status" aria-live="polite"></div>
+          <p class="popup-footer">
+            <a id="report-bug-link" href="mailto:?stcksmsh@gmail.com=EmojiType%20Bug%20Report&body=Version%3A%20(see%20extension)%0A%0ADescribe%20the%20issue%3A%0A" target="_blank" rel="noopener">Report a bug</a>
+          </p>
         </div>
       </section>
     </main>

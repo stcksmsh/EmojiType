@@ -112,11 +112,11 @@ window.__emojitypeSuggestionsKey = function (key) {
   )
     return;
   if (key === "ArrowDown") {
-    setHighlight(
-      Math.min(currentHighlightedIndex + 1, currentSuggestionsList.length - 1)
-    );
+    var next = currentHighlightedIndex + 1;
+    setHighlight(next >= currentSuggestionsList.length ? 0 : next);
   } else if (key === "ArrowUp") {
-    setHighlight(Math.max(currentHighlightedIndex - 1, 0));
+    var prev = currentHighlightedIndex - 1;
+    setHighlight(prev < 0 ? currentSuggestionsList.length - 1 : prev);
   } else if (key === "Enter") {
     selectHighlighted();
   }
