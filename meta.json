@@ -1,0 +1,11 @@
+{
+  "slug": "emojitype",
+  "title": "EmojiType",
+  "tagline": "A browser extension that turns typed keywords into emoji as you go.",
+  "status": "active",
+  "stack": ["JavaScript", "Chrome Extension", "Vitest"],
+  "repo": "https://github.com/stcksmsh/EmojiType",
+  "accent": [0.8, 0.15, 85],
+  "featured": true,
+  "order": 4
+}
