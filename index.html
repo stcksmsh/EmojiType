@@ -3,15 +3,131 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>EmojiType</title>
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <title>EmojiType — type :smile:, get 😄</title>
+    <meta name="description" content="A browser extension that turns short keywords into emoji as you type. Type :smile: or :smile + Tab and get 😄, in any text field." />
+    <meta property="og:title" content="EmojiType — type :smile:, get 😄" />
+    <meta property="og:description" content="A Chrome/Edge extension that turns typed keywords into emoji as you go." />
+    <meta property="og:type" content="website" />
+    <link rel="icon" href="/media/icon128.png" type="image/png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=JetBrains+Mono:wght@400;600&display=swap" />
   </head>
   <body>
+    <a class="skip" href="#try">Skip to the playground</a>
+
+    <header class="hero">
+      <div class="brand">
+        <img src="/media/icon128.png" alt="" width="48" height="48" />
+        <span>EmojiType</span>
+        <span class="ver mono">v3.0</span>
+      </div>
+      <h1>Type <code class="kw">:smile:</code><br />get <span class="big-emoji" role="img" aria-label="smiling face">😄</span></h1>
+      <p class="lede">A browser extension that turns short keywords into emoji as you type, in any text field. Pick your own delimiter, autocomplete with Tab, and keep your own dictionary.</p>
+      <div class="field fake" aria-hidden="true"><span id="hero-text"></span><span class="caret"></span></div>
+      <nav class="cta" aria-label="Project">
+        <a class="btn primary" href="#try">Try it here</a>
+        <a class="btn" href="#install">Install</a>
+        <a class="btn ghost" href="https://github.com/stcksmsh/EmojiType">Source on GitHub</a>
+      </nav>
+    </header>
+
     <main>
-      <h1>EmojiType</h1>
-      <p>This site is built and deployed from the <code>website</code> branch of its own repository.</p>
-      <p id="built"></p>
+      <section id="try" class="card play" aria-labelledby="try-h">
+        <div class="head">
+          <h2 id="try-h">Try it</h2>
+          <p>Same rules as the extension, rebuilt for this page. Nothing leaves your browser.</p>
+        </div>
+        <div class="controls" role="group" aria-label="Playground options">
+          <label>Delimiter
+            <select id="delim">
+              <option value=":">:</option>
+              <option value=";">;</option>
+              <option value="!">!</option>
+              <option value="/">/</option>
+            </select>
+          </label>
+          <label class="check"><input type="checkbox" id="sugg" checked /> Suggestions</label>
+          <button type="button" class="btn small" id="clear">Clear</button>
+        </div>
+        <div class="editor">
+          <label class="sr" for="pad">Type here</label>
+          <textarea id="pad" rows="5" spellcheck="false" autocomplete="off" placeholder="Type :party: or :sm and press Tab"></textarea>
+          <ul id="suggest" class="suggest" role="listbox" aria-label="Suggestions" hidden></ul>
+          <div id="burst" class="burst" aria-hidden="true"></div>
+        </div>
+        <ol class="rules">
+          <li><kbd class="d">:</kbd><b>keyword</b><kbd class="d">:</kbd> replaces it with the emoji.</li>
+          <li><kbd class="d">:</kbd><b>key</b> + <kbd>Tab</kbd> autocompletes. <kbd>↑</kbd> <kbd>↓</kbd> pick, <kbd>Enter</kbd> inserts.</li>
+          <li><kbd>Backspace</kbd> right after an emoji gives the keyword back.</li>
+        </ol>
+        <p class="sr" id="live" aria-live="polite"></p>
+      </section>
+
+      <section class="card dict" aria-labelledby="dict-h">
+        <div class="head">
+          <h2 id="dict-h">The dictionary</h2>
+          <p>The <span id="dict-count">27</span> keywords EmojiType ships with. Click one to type it into the playground. In the extension you add, edit and remove your own, and back them up.</p>
+        </div>
+        <div id="dict" class="chips"></div>
+        <form id="add" class="add">
+          <label>Keyword <input id="add-key" required pattern="[A-Za-z0-9_]+" maxlength="24" placeholder="ship_it" /></label>
+          <label>Emoji <input id="add-emoji" required maxlength="8" placeholder="🚀" /></label>
+          <button class="btn small primary" type="submit">Add on this page</button>
+        </form>
+      </section>
+
+      <section class="card popup" aria-labelledby="pop-h">
+        <div class="head">
+          <h2 id="pop-h">Three tabs in the popup</h2>
+        </div>
+        <div class="tabs" role="tablist" aria-label="Popup tabs">
+          <button type="button" role="tab" id="t-sites" aria-controls="p-sites" aria-selected="true">Sites</button>
+          <button type="button" role="tab" id="t-options" aria-controls="p-options" aria-selected="false" tabindex="-1">Options</button>
+          <button type="button" role="tab" id="t-dict" aria-controls="p-dict" aria-selected="false" tabindex="-1">Dictionary</button>
+        </div>
+        <div class="panel" role="tabpanel" id="p-sites" aria-labelledby="t-sites" tabindex="0">
+          <p>Whitelist or blacklist sites by URL pattern, so EmojiType runs only where you want it. Turn it on or off for the current site with one click.</p>
+        </div>
+        <div class="panel" role="tabpanel" id="p-options" aria-labelledby="t-options" tabindex="0" hidden>
+          <p>Set the <b>delimiter</b> (<code>:</code>, <code>;</code>, …), switch <b>suggestions</b> on or off and set their opacity, and pick a light or dark <b>theme</b>.</p>
+        </div>
+        <div class="panel" role="tabpanel" id="p-dict" aria-labelledby="t-dict" tabindex="0" hidden>
+          <p>Add, edit and remove keyword → emoji entries. <b>Backup</b> exports or imports your dictionary, or resets it to the defaults.</p>
+        </div>
+      </section>
+
+      <section id="install" class="card install" aria-labelledby="inst-h">
+        <div class="head">
+          <h2 id="inst-h">Install</h2>
+          <p>For Chrome and Edge (Manifest V3).</p>
+        </div>
+        <ol class="steps">
+          <li>Get the source: clone <a href="https://github.com/stcksmsh/EmojiType">the repository</a> or download the <a href="https://github.com/stcksmsh/EmojiType/releases/latest">latest release</a>.</li>
+          <li>Open <code>chrome://extensions</code> and turn on <b>Developer mode</b>.</li>
+          <li>Click <b>Load unpacked</b> and pick the folder that contains <code>manifest.json</code>.</li>
+          <li>Pin it, choose a delimiter, start typing.</li>
+        </ol>
+      </section>
+
+      <section class="card privacy" aria-labelledby="priv-h">
+        <div class="head">
+          <h2 id="priv-h">Private by default</h2>
+          <p>EmojiType collects nothing and sends nothing: no analytics, no third-party services. The text is replaced locally, in the page you're typing on. <a href="https://github.com/stcksmsh/EmojiType/blob/master/PrivacyPolicy.md">Privacy policy</a></p>
+        </div>
+        <dl class="perms">
+          <div><dt class="mono">storage</dt><dd>keeps your dictionary, delimiter and site list</dd></div>
+          <div><dt class="mono">activeTab, scripting</dt><dd>runs the typing helper in the page you're on</dd></div>
+          <div><dt class="mono">all sites</dt><dd>so it works in any text field; your Sites list narrows it down</dd></div>
+        </dl>
+      </section>
     </main>
+
+    <footer>
+      <p>JavaScript, Chrome extension (Manifest V3), tested with Vitest. <a href="https://github.com/stcksmsh/EmojiType">github.com/stcksmsh/EmojiType</a></p>
+      <p>Icons: <a href="https://www.flaticon.com/free-icons/happy-face">happy face icons</a> by NajmunNahar, Flaticon. Made by <a href="https://kostavukicevic.com/">Kosta Vukićević</a>.</p>
+    </footer>
+
     <script type="module" src="/src/main.js"></script>
   </body>
 </html>
